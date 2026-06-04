@@ -27,21 +27,16 @@ ersilia-mcp
 ```
 
 ## Register
+### Claude Code
 
-Register it with Claude by running the following CLI command:
+`claude mcp add` needs the absolute path to the entry point, and it does not
+inherit your activated conda environment. Ask conda for the path, then register
+it:
 ```bash
-claude mcp add ersilia-mcp $HOME/miniconda3/envs/ersilia_mcp/bin/ersilia-mcp
-```
+conda activate ersilia_mcp
+which ersilia-mcp   # e.g. /Users/you/miniconda3/envs/ersilia_mcp/bin/ersilia-mcp
 
-(Untested) Register it with an MCP client (e.g. Claude Desktop) by adding to the client's config:
-```json
-{
-  "mcpServers": {
-    "ersilia-mcp": {
-      "command": "ersilia-mcp"
-    }
-  }
-}
+claude mcp add ersilia-mcp "$(which ersilia-mcp)"
 ```
 
 ## About the Ersilia Open Source Initiative

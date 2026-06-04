@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "my-package"
+name = "ersilia-mcp"
 version = "0.1.0"
-description = "A short description of my package"
+description = "A hello-world Model Context Protocol (MCP) server for the Ersilia ecosystem"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
@@ -14,7 +14,8 @@ authors = [
 requires-python = ">=3.10"
 
 dependencies = [
-  "numpy==2.2.6",
+  "mcp==1.27.2",
+  "rich==15.0.0",
 ]
 
 [project.optional-dependencies]
@@ -23,9 +24,11 @@ dev = [
   "ruff==0.15.13",
 ]
 
+[project.scripts]
+ersilia-mcp = "ersilia_mcp.server:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-

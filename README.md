@@ -26,9 +26,14 @@ directly to check it starts:
 ersilia-mcp
 ```
 
-Register it with an MCP client (e.g. Claude Desktop) by adding to the client's
-config:
+## Register
 
+Register it with Claude by running the following CLI command:
+```bash
+claude mcp add ersilia-mcp $HOME/miniconda3/envs/ersilia_mcp/bin/ersilia-mcp
+```
+
+(Untested) Register it with an MCP client (e.g. Claude Desktop) by adding to the client's config:
 ```json
 {
   "mcpServers": {

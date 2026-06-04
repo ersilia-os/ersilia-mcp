@@ -6,6 +6,8 @@ stdio so that MCP clients (e.g. Claude Desktop) can spawn it as a subprocess.
 
 from mcp.server.fastmcp import FastMCP
 
+from ersilia_mcp.utils.logging import logger
+
 mcp = FastMCP("ersilia-mcp")
 
 
@@ -23,6 +25,7 @@ def hello(name: str) -> str:
     str
         The greeting ``"Hello, {name}!"``.
     """
+    logger.info("Greeting %s", name)
     return f"Hello, {name}!"
 
 
@@ -34,6 +37,7 @@ def greeting() -> str:
 
 def main() -> None:
     """Run the MCP server over stdio."""
+    logger.success("Starting Ersilia MCP server over stdio")
     mcp.run()
 
 

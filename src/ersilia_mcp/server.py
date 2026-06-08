@@ -1,38 +1,17 @@
-"""A minimal "hello world" MCP server built on the official FastMCP SDK.
+"""An MCP server for the Ersilia model hub, built on the official FastMCP SDK.
 
-Exposes a single ``hello`` tool and a static greeting resource, served over
-stdio so that MCP clients (e.g. Claude Desktop) can spawn it as a subprocess.
+Creates the FastMCP instance, registers the tool/resource modules, and serves
+them over stdio so that MCP clients (e.g. Claude Desktop) can spawn it as a
+subprocess.
 """
 
 from mcp.server.fastmcp import FastMCP
 
+from ersilia_mcp.tools import search
 from ersilia_mcp.utils.logging import logger
 
 mcp = FastMCP("ersilia-mcp")
-
-
-@mcp.tool()
-def hello(name: str) -> str:
-    """Return a friendly greeting.
-
-    Parameters
-    ----------
-    name : str
-        The name to greet.
-
-    Returns
-    -------
-    str
-        The greeting ``"Hello, {name}!"``.
-    """
-    logger.info("Greeting %s", name)
-    return f"Hello, {name}!"
-
-
-@mcp.resource("greeting://hello")
-def greeting() -> str:
-    """Provide a static greeting message as an MCP resource."""
-    return "Hello from the Ersilia MCP server!"
+search.register(mcp)
 
 
 def main() -> None:

@@ -1,43 +1,47 @@
-# Hello-world MCP server for Ersilia
+# MCP server for the Ersilia Model Hub
 
-A minimal [Model Context Protocol](https://modelcontextprotocol.io) server built
-on the official FastMCP SDK. It exposes one tool and one resource, served over
-stdio, as a starting point for Ersilia MCP integrations.
+A [Model Context Protocol](https://modelcontextprotocol.io) server built on the
+official FastMCP SDK. It lets MCP clients search the Ersilia Model Hub catalog,
+served over stdio.
 
-| Primitive | Name              | Description                          |
-| --------- | ----------------- | ------------------------------------ |
-| Tool      | `hello`           | Returns `"Hello, {name}!"`.          |
-| Resource  | `greeting://hello`| A static greeting message.           |
+| Primitive | Name               | Description                                   |
+| --------- | ------------------ | --------------------------------------------- |
+| Tool      | `search_model`     | Searches the Ersilia model hub catalog.       |
 
-## Installation
+## Local Installation
 
-```bash
-conda create -n ersilia_mcp python=3.12
-conda activate ersilia_mcp
-pip install git+https://github.com/ersilia-os/ersilia-mcp.git
-```
-
-## Running
-
-The server speaks stdio, so MCP clients spawn it as a subprocess. Run it
-directly to check it starts:
+This server shells out to the [Ersilia CLI](https://github.com/ersilia-os/ersilia),
+which lives in its **own** conda environment. Install the two separately.
 
 ```bash
-ersilia-mcp
+conda create -n ersilia-mcp python=3.12
+conda activate ersilia-mcp
+pip install .
 ```
 
 ## Register
 ### Claude Code
 
 `claude mcp add` needs the absolute path to the entry point, and it does not
-inherit your activated conda environment. Ask conda for the path, then register
-it:
+inherit your activated conda environment. Find it and register:
 ```bash
-conda activate ersilia_mcp
-which ersilia-mcp   # e.g. /Users/you/miniconda3/envs/ersilia_mcp/bin/ersilia-mcp
+conda activate ersilia-mcp
+which ersilia-mcp   # e.g. /Users/you/miniconda3/envs/ersilia-mcp/bin/ersilia-mcp
 
 claude mcp add ersilia-mcp "$(which ersilia-mcp)"
 ```
+
+You can check to see if it's connected properly by running:
+```bash
+claude mcp list
+```
+
+You should see something like:
+```bash
+ersilia-mcp: /Users/you/miniconda3/envs/ersilia-mcp/bin/ersilia-mcp  - ✓ Connected
+```
+
+If you're using the VSCode extension, you can also type `/mcp` in the chatbox.
 
 ## About the Ersilia Open Source Initiative
 

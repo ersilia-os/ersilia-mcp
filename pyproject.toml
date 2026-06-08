@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ersilia-mcp"
 version = "0.1.0"
-description = "A hello-world Model Context Protocol (MCP) server for the Ersilia ecosystem"
+description = "A Model Context Protocol (MCP) server for searching the Ersilia Model Hub"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
@@ -16,6 +16,7 @@ requires-python = ">=3.10"
 dependencies = [
   "mcp==1.27.2",
   "rich==15.0.0",
+  "ersilia==0.1.51",
 ]
 
 [project.optional-dependencies]
@@ -32,3 +33,6 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "integration: integration tests that call real APIs",
+]

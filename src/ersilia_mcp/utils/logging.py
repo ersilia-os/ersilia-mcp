@@ -7,11 +7,25 @@ reporting successful outcomes.
 """
 
 import logging
+from pathlib import Path
 
 from rich.logging import RichHandler
 
 SUCCESS = 25
+LOGS_DIR = "logs"
+LOG_FILENAME = "ersilia-mcp.log"
+LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(message)s"
 logging.addLevelName(SUCCESS, "SUCCESS")
+
+
+def _get_project_root() -> Path:
+    """Find the project root by looking for pyproject.toml."""
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists():
+            return parent
+    # Fallback: assume standard layout (src/package/utils/logging.py)
+    return current.parents[3]
 
 
 class ErsiliaLogger(logging.Logger):
@@ -22,6 +36,28 @@ class ErsiliaLogger(logging.Logger):
         if self.isEnabledFor(SUCCESS):
             self._log(SUCCESS, msg, args, **kwargs)
 
+    def log_to_file(self):
+        """
+        Configure the logger to write to a file in the logs/ directory.
+
+        Creates a logs/ directory if it doesn't exist and adds a FileHandler
+        to write logs to ersilia-mcp.log.
+
+        Returns
+        -------
+        Path
+            The path to the log file.
+        """
+        log_dir_path = _get_project_root() / LOGS_DIR
+        log_dir_path.mkdir(exist_ok=True)
+        log_filepath = log_dir_path / LOG_FILENAME
+
+        file_handler = logging.FileHandler(log_filepath)
+        file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+        self.addHandler(file_handler)
+
+        return log_filepath
+
 
 def _build_logger() -> ErsiliaLogger:
     logging.setLoggerClass(ErsiliaLogger)
@@ -29,9 +65,10 @@ def _build_logger() -> ErsiliaLogger:
     log.setLevel(logging.INFO)
     if not log.handlers:
         handler = RichHandler(rich_tracebacks=True, show_path=False)
-        handler.setFormatter(logging.Formatter("%(message)s", datefmt="[%X]"))
+        handler.setFormatter(logging.Formatter(LOG_FORMAT))
         log.addHandler(handler)
     log.propagate = False
+    log.log_to_file()
     return log
 
 

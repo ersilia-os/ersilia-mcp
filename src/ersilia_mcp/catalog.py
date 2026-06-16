@@ -34,6 +34,7 @@ def format_catalog(data: object) -> str:
         if title:
             line += f" — {title}"
         lines.append(line)
+    logger.info("Formatted %d of %d models", len(lines), len(data))
     return "\n".join(lines)
 
 
@@ -48,10 +49,12 @@ def fetch_catalog() -> str:
     try:
         df = catalog(hub=True, more=True)
         if df is None:
+            logger.warning("Failed to fetch catalog from hub.")
             return "Failed to fetch catalog from hub."
         # Convert DataFrame to list of dicts for formatting
         data = df.to_dict("records")
+        logger.success("Fetched %d models from Ersilia model hub", len(data))
         return format_catalog(data) or "No models found in catalog."
     except Exception as exc:
-        logger.warning("Failed to fetch catalog: %s", exc)
+        logger.error("Failed to fetch catalog: %s", exc)
         return f"Failed to fetch catalog: {exc}"

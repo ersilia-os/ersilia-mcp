@@ -7,6 +7,7 @@ reporting successful outcomes.
 """
 
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
 from rich.logging import RichHandler
@@ -40,8 +41,8 @@ class ErsiliaLogger(logging.Logger):
         """
         Configure the logger to write to a file in the logs/ directory.
 
-        Creates a logs/ directory if it doesn't exist and adds a FileHandler
-        to write logs to ersilia-mcp.log.
+        Creates a logs/ directory if it doesn't exist and adds a TimedRotatingFileHandler
+        to write logs to ersilia-mcp.log. Rotates daily at midnight and keeps 7 days of logs.
 
         Returns
         -------
@@ -52,7 +53,9 @@ class ErsiliaLogger(logging.Logger):
         log_dir_path.mkdir(exist_ok=True)
         log_filepath = log_dir_path / LOG_FILENAME
 
-        file_handler = logging.FileHandler(log_filepath)
+        file_handler = TimedRotatingFileHandler(
+            log_filepath, when="midnight", interval=1, backupCount=7
+        )
         file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
         self.addHandler(file_handler)
 

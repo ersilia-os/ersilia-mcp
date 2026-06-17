@@ -7,6 +7,8 @@ conda activate ersilia-mcp
 pip install -e ".[dev]"
 ```
 
+Logs can be found in ersilia-mcp/logs/ersilia-mcp.log
+
 ## Register
 ### Claude Code
 

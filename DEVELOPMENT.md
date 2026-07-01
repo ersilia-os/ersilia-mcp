@@ -58,16 +58,35 @@ conda activate ersilia-mcp
 ersilia-mcp
 ```
 
-## Linter
+## Linting and Code Quality
+
+Run ruff to check and format code:
 ```bash
-ruff format
+ruff check .
+ruff format .
 ```
 
-## Running tests locally
+## Tests
+
+The test suite is split into two categories:
+
+**Unit tests** (fast, safe, run offline):
 ```bash
-# Skip integration tests to avoid corrupting your local env
 pytest -v -m "not integration"
 ```
+
+These test the MCP tools and utilities with mocked Ersilia API calls. Safe to run locally without side effects.
+
+**Integration tests** (slower, hit real APIs, mark with `@pytest.mark.integration`):
+```bash
+pytest -v -m integration
+```
+
+These call the live Ersilia Model Hub APIs to validate search and fetch operations against real data. Note: fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
+
+## CI/CD
+
+A [GitHub Action](.github/workflows/ci.yml) runs on every push to `main` and on pull requests.
 
 ## Debugging Ersilia operations
 Locally fetched/served models are stored in the `~/eos/` directory.

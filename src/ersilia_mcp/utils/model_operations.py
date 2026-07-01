@@ -1,10 +1,20 @@
 """Wrappers for Ersilia model operations."""
 
+import os
+import sys
 import traceback
 
 from ersilia.api import Model
 
 from ersilia_mcp.utils.logging import logger
+
+
+def _log_conda_environment() -> None:
+    """Log the active conda environment and Python interpreter for debugging."""
+    logger.debug(f"CONDA_DEFAULT_ENV={os.environ.get('CONDA_DEFAULT_ENV')}")
+    logger.debug(f"CONDA_PREFIX={os.environ.get('CONDA_PREFIX')}")
+    logger.debug(f"sys.executable={sys.executable}")
+    logger.debug(f"sys.prefix={sys.prefix}")
 
 
 def fetch_model_helper(model_id: str) -> bool:
@@ -22,6 +32,7 @@ def fetch_model_helper(model_id: str) -> bool:
         True if the model was successfully fetched.
     """
     try:
+        _log_conda_environment()
         logger.info(f"Checking if model {model_id} is fetched")
         mdl = Model(model_id=model_id)
         is_already_fetched = mdl.is_fetched()
@@ -52,6 +63,7 @@ def check_model_fetched_helper(model_id: str) -> bool:
         True if model is already fetched. False otherwise
     """
     try:
+        _log_conda_environment()
         mdl = Model(model_id=model_id)
         return mdl.is_fetched()
     except Exception as e:

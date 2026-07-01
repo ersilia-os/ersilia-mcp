@@ -7,10 +7,12 @@ conda activate ersilia-mcp
 pip install -e ".[dev]"
 ```
 
-## Using the MCP server with the Claude CLI
-### Auto registering
+## Using the MCP server with Claude Code
 
-The repo ships a project-scoped [`.mcp.json`](.mcp.json) that'll automatically configure Claude to launch this local mcp server over stdio:
+### Auto registration
+
+The repo ships a project-scoped [`.mcp.json`](.mcp.json) that automatically configures
+Claude to launch the MCP server over stdio:
 
 ```json
 {
@@ -22,38 +24,28 @@ The repo ships a project-scoped [`.mcp.json`](.mcp.json) that'll automatically c
   }
 }
 ```
-Note:`--no-capture-output` is required: without it `conda run` buffers stdout and corrupts the stdio JSON-RPC stream, so the MCP handshake fails.
 
-You'll need to run `claude` to approve this new mcp server.
-
-Run the following to verify the server is running properly:
+Verify the server is running:
 ```bash
 claude mcp list
 ```
 
-You should see something like:
+You should see `ersilia-mcp: ... - ✔ Connected`.
+
+If you're using the Claude Code VS Code extension, you can also type `/mcp` in the chatbox.
+
+**Caveat:** If you have an older local registration (from `claude mcp add`), it may take
+precedence. To rely on the committed `.mcp.json`, remove the local registration:
 ```bash
-ersilia-mcp: ${CONDA_EXE:-conda} run --no-capture-output -n ersilia-mcp ersilia-mcp - ✔ Connected
+claude mcp remove ersilia-mcp
 ```
 
-### Registering manually
+### Manual registration
 
-To register manually instead (e.g. a different env name), the equivalent is:
+To register manually (e.g. for a different environment name):
 ```bash
 claude mcp add ersilia-mcp -- conda run --no-capture-output -n ersilia-mcp ersilia-mcp
 ```
-
-Run the following to verify the server is running properly:
-```bash
-claude mcp list
-```
-
-You should see something like:
-```bash
-ersilia-mcp: conda run --no-capture-output -n ersilia-mcp ersilia-mcp - ✔ Connected
-```
-
-If you're using the Claude Code for VS Code extension, you can also type `/mcp` in the chatbox.
 
 ## Starting the server locally
 

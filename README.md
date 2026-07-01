@@ -8,40 +8,28 @@ served over stdio.
 | --------- | ------------------ | --------------------------------------------- |
 | Tool      | `search_model`     | Searches the Ersilia model hub catalog.       |
 
-## Local Installation
+## Installation
 
-This server shells out to the [Ersilia CLI](https://github.com/ersilia-os/ersilia),
-which lives in its **own** conda environment. Install the two separately.
+Prerequisite: Ensure you have [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation) installed (miniconda is fine).
 
+Create a new virtual conda environment, activate it, and install the necessary packages:
 ```bash
 conda create -n ersilia-mcp python=3.12
 conda activate ersilia-mcp
 pip install .
 ```
 
-## Register
-### Claude Code
+## Register with Claude Code
 
-`claude mcp add` needs the absolute path to the entry point, and it does not
-inherit your activated conda environment. Find it and register:
-```bash
-conda activate ersilia-mcp
-which ersilia-mcp   # e.g. /Users/you/miniconda3/envs/ersilia-mcp/bin/ersilia-mcp
+The repo ships a [`.mcp.json`](.mcp.json) that auto-registers the server. Just verify it's running:
 
-claude mcp add ersilia-mcp "$(which ersilia-mcp)"
-```
-
-You can check to see if it's connected properly by running:
 ```bash
 claude mcp list
 ```
 
-You should see something like:
-```bash
-ersilia-mcp: /Users/you/miniconda3/envs/ersilia-mcp/bin/ersilia-mcp  - ✓ Connected
-```
+You should see `ersilia-mcp: ... - ✔ Connected`.
 
-If you're using the VSCode extension, you can also type `/mcp` in the chatbox.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for manual registration, debugging, or development setup.
 
 ## About the Ersilia Open Source Initiative
 

@@ -7,38 +7,72 @@ conda activate ersilia-mcp
 pip install -e ".[dev]"
 ```
 
-Logs can be found in ersilia-mcp/logs/ersilia-mcp.log
+## Using the MCP server with Claude Code
 
-## Register
-### Claude Code
+### Auto registration
 
-`claude mcp add` needs the absolute path to the entry point, and it does not
-inherit your activated conda environment. Find it and register:
-```bash
-conda activate ersilia-mcp
-which ersilia-mcp   # e.g. /Users/you/miniconda3/envs/ersilia-mcp/bin/ersilia-mcp
+The repo ships a project-scoped [`.mcp.json`](.mcp.json) that automatically configures
+Claude to launch the MCP server over stdio:
 
-claude mcp add ersilia-mcp "$(which ersilia-mcp)"
+```json
+{
+  "mcpServers": {
+    "ersilia-mcp": {
+      "command": "${CONDA_EXE:-conda}",
+      "args": ["run", "--no-capture-output", "-n", "ersilia-mcp", "ersilia-mcp"]
+    }
+  }
+}
 ```
 
-You can check to see if it's connected properly by running:
+Verify the server is running:
 ```bash
 claude mcp list
 ```
 
-You should see something like:
+You should see `ersilia-mcp: ... - ✔ Connected`.
+
+If you're using the Claude Code VS Code extension, you can also type `/mcp` in the chatbox.
+
+**Caveat:** If you have an older local registration (from `claude mcp add`), it may take
+precedence. To rely on the committed `.mcp.json`, remove the local registration:
 ```bash
-ersilia-mcp: /Users/you/miniconda3/envs/ersilia-mcp/bin/ersilia-mcp  - ✓ Connected
+claude mcp remove ersilia-mcp
 ```
 
-If you're using the VSCode extension, you can also type `/mcp` in the chatbox.
+### Manual registration
+
+To register manually (e.g. for a different environment name):
+```bash
+claude mcp add ersilia-mcp -- conda run --no-capture-output -n ersilia-mcp ersilia-mcp
+```
+
+## Starting the server locally
+
+After registering, Claude should automatically start the MCP server as a subprocess.
+You can check this by running `ps aux | grep ersilia-mcp` or by running `/mcp` in the chatbox. Logs can be found in ersilia-mcp/logs/ersilia-mcp.log
+
+If you don't see a running process or if `/mcp` is showing an error, you can debug this by starting the server manually:
+```bash
+conda activate ersilia-mcp
+ersilia-mcp
+```
 
 ## Linter
 ```bash
 ruff format
 ```
 
-## Tests
+## Running tests locally
 ```bash
-pytest -v
+# Skip integration tests to avoid corrupting your local env
+pytest -v -m "not integration"
 ```
+
+## Debugging Ersilia operations
+Locally fetched/served models are stored in the `~/eos/` directory.
+
+To manually check which models are fetched, check `~/eos/repository/`.
+To manually check which models are served, check `~/eos/sessions/`.
+
+Note: Since we're using the ersilia python package, the ersilia CLI should also be installed in your conda environment.

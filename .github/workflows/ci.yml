@@ -23,7 +23,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Set up conda
-        uses: conda-incubator/setup-miniconda@a4260408e4b67c9018a00b9a53d6cda77dc0caee
+        uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5
         with:
           python-version: ${{ matrix.python-version }}
           auto-activate-base: true
@@ -42,7 +42,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Set up conda
-        uses: conda-incubator/setup-miniconda@a4260408e4b67c9018a00b9a53d6cda77dc0caee
+        uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5
         with:
           python-version: "3.12"
           auto-activate-base: true

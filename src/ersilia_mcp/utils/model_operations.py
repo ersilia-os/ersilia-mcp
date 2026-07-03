@@ -42,7 +42,7 @@ def fetch_model_helper(model_id: str) -> bool:
             mdl.fetch()
             logger.info(f"Fetch completed for {model_id}")
         return mdl.is_fetched()
-    except Exception as e:
+    except (Exception, SystemExit) as e:
         logger.error(f"Error fetching model {model_id}: {str(e)}")
         logger.error(traceback.format_exc())
         return False
@@ -66,7 +66,7 @@ def check_model_fetched_helper(model_id: str) -> bool:
         _log_conda_environment()
         mdl = Model(model_id=model_id)
         return mdl.is_fetched()
-    except Exception as e:
+    except (Exception, SystemExit) as e:
         logger.error(
             f"Encountered an error while checking if {model_id} is fetched: {str(e)}"
         )

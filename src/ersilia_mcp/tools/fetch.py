@@ -30,8 +30,8 @@ def register(mcp: FastMCP) -> None:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, fetch_model_helper, model)
 
-    @mcp.tool()
-    def check_model_fetched(model: str) -> bool:
+    @mcp.tool(timeout=10.0)
+    async def check_model_fetched(model: str) -> bool:
         """Check if a model is fetched from the Ersilia model hub.
 
         Parameters
@@ -44,4 +44,5 @@ def register(mcp: FastMCP) -> None:
         bool
             True if fetched, False otherwise.
         """
-        return check_model_fetched_helper(model)
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, check_model_fetched_helper, model)

@@ -29,9 +29,7 @@ def test_check_model_fetched_tool_true():
     """Test the check_model_fetched tool returns True."""
     with patch("ersilia_mcp.tools.fetch.check_model_fetched_helper") as mock_check:
         mock_check.return_value = True
-        result = asyncio.run(
-            mcp.call_tool("check_model_fetched", {"model": "eos8v1a"})
-        )
+        result = asyncio.run(mcp.call_tool("check_model_fetched", {"model": "eos8v1a"}))
         assert result.structured_content["result"] is True
         mock_check.assert_called_once_with("eos8v1a")
 

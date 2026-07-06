@@ -1,6 +1,6 @@
 """The ``search_model`` tool."""
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 from ersilia_mcp.utils.search_api import search_catalog
 

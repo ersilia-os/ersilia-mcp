@@ -7,7 +7,7 @@ subprocess.
 
 from ersilia_mcp.utils.logging import logger
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 from ersilia_mcp.tools import fetch, search
 

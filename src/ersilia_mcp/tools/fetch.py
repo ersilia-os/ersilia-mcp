@@ -13,7 +13,7 @@ from ersilia_mcp.utils.model_operations import (
 def register(mcp: FastMCP) -> None:
     """Register the model tools on the MCP server."""
 
-    @mcp.tool(timeout=300.0)
+    @mcp.tool(timeout=900.0)
     async def fetch_model(model: str) -> bool:
         """Fetch a model from the Ersilia model hub.
 

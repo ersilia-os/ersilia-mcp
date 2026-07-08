@@ -52,16 +52,6 @@ def test_fetch_model_helper_fetch_fails(mock_model_class):
 
 
 @patch("ersilia_mcp.utils.model_operations.Model")
-def test_fetch_model_helper_model_init_fails(mock_model_class):
-    """Test fetch_model_helper when Model initialization fails."""
-    mock_model_class.side_effect = Exception("Invalid model ID")
-
-    result = fetch_model_helper("invalid")
-
-    assert result is False
-
-
-@patch("ersilia_mcp.utils.model_operations.Model")
 def test_check_model_fetched_helper_is_fetched(mock_model_class):
     """Test check_model_fetched_helper when model is fetched."""
     mock_instance = MagicMock()

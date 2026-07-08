@@ -1,20 +1,10 @@
 """Wrappers for Ersilia model operations."""
 
-import os
-import sys
 import traceback
 
 from ersilia.api import Model
 
-from ersilia_mcp.utils.logging import logger
-
-
-def _log_conda_environment() -> None:
-    """Log the active conda environment and Python interpreter for debugging."""
-    logger.debug(f"CONDA_DEFAULT_ENV={os.environ.get('CONDA_DEFAULT_ENV')}")
-    logger.debug(f"CONDA_PREFIX={os.environ.get('CONDA_PREFIX')}")
-    logger.debug(f"sys.executable={sys.executable}")
-    logger.debug(f"sys.prefix={sys.prefix}")
+from ersilia_mcp.utils.logging import logger, log_conda_environment
 
 
 def fetch_model_helper(model_id: str) -> bool:
@@ -32,7 +22,7 @@ def fetch_model_helper(model_id: str) -> bool:
         True if the model was successfully fetched.
     """
     try:
-        _log_conda_environment()
+        log_conda_environment()
         logger.info(f"Checking if model {model_id} is fetched")
         mdl = Model(model_id=model_id)
         is_already_fetched = mdl.is_fetched()
@@ -63,12 +53,65 @@ def check_model_fetched_helper(model_id: str) -> bool:
         True if model is already fetched. False otherwise
     """
     try:
-        _log_conda_environment()
+        log_conda_environment()
         mdl = Model(model_id=model_id)
         return mdl.is_fetched()
     except (Exception, SystemExit) as e:
         logger.error(
             f"Encountered an error while checking if {model_id} is fetched: {str(e)}"
+        )
+        logger.error(traceback.format_exc())
+        return False
+
+
+def serve_model_helper(model_id: str) -> dict:
+    """
+    Serve a fetched model
+
+    Parameters
+    ----------
+    model_id : str
+        Model identifier (e.g., ``eos8v1a``).
+
+    Returns
+    -------
+    dict
+        A dictionary containing:
+            - url: The URL where the model is being served
+            - session: The session object
+            - server: The server object
+        or an empty dict if serving failed.
+    """
+    try:
+        logger.info(f"Serving model {model_id}...")
+        mdl = Model(model_id=model_id, verbose=True)
+        result = mdl.serve()
+        logger.info("Successfully served the model. You can run `docker ps` to manually confirm the model is served.")
+        logger.debug(f"Model information: {mdl.info()}")
+        return result or {}
+    except RuntimeError as e:
+        logger.error(f"Encountered an error while serving {model_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+        return {}
+    
+def close_model_helper(model_id: str) -> bool:
+    """
+    Close the current session and clean up associated resources.
+
+    Terminates the model server and removes the session file, freeing up system resources.
+
+    Returns
+    -------
+    bool
+        True if the session was successfully closed, False otherwise.
+    """
+    try:
+        logger.info(f"Closing model {model_id}...")
+        mdl = Model(model_id=model_id, verbose=True)
+        return mdl.close() or False
+    except (Exception, SystemExit) as e:
+        logger.error(
+            f"Encountered an error closing model {model_id}: {str(e)}"
         )
         logger.error(traceback.format_exc())
         return False

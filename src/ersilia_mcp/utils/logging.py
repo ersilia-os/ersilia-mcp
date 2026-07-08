@@ -7,6 +7,8 @@ reporting successful outcomes.
 """
 
 import logging
+import os
+import sys
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
@@ -60,6 +62,14 @@ class ErsiliaLogger(logging.Logger):
         self.addHandler(file_handler)
 
         return log_filepath
+
+
+def log_conda_environment() -> None:
+    """Log the active conda environment and Python interpreter for debugging."""
+    logger.debug(f"CONDA_DEFAULT_ENV={os.environ.get('CONDA_DEFAULT_ENV')}")
+    logger.debug(f"CONDA_PREFIX={os.environ.get('CONDA_PREFIX')}")
+    logger.debug(f"sys.executable={sys.executable}")
+    logger.debug(f"sys.prefix={sys.prefix}")
 
 
 def _build_logger() -> ErsiliaLogger:

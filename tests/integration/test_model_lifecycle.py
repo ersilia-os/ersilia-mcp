@@ -19,7 +19,7 @@ from ersilia_mcp.utils.model_operations import (
 @pytest.mark.integration
 def test_model_complete_lifecycle():
     """Test complete model lifecycle: fetch → check → serve → close."""
-    model_id = "eos8v1a"
+    model_id = "eos43d6"
 
     # Step 1: Fetch the model
     fetch_result = fetch_model_helper(model_id)
@@ -39,5 +39,4 @@ def test_model_complete_lifecycle():
 
     # Step 4: Close the model service
     close_result = close_model_helper(model_id)
-    # TODO: This should pass once the API is updated
     assert close_result is True

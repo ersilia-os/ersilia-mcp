@@ -76,19 +76,16 @@ def serve_model_helper(model_id: str) -> dict:
     Returns
     -------
     dict
-        A dictionary containing:
-            - url: The URL where the model is being served
-            - session: The session object
-            - server: The server object
+        A dictionary containing information from Model.info()
         or an empty dict if serving failed.
     """
     try:
         logger.info(f"Serving model {model_id}...")
         mdl = Model(model_id=model_id, verbose=True)
-        result = mdl.serve()
+        mdl.serve()
         logger.info("Successfully served the model. You can run `docker ps` to manually confirm the model is served.")
-        logger.debug(f"Model information: {mdl.info()}")
-        return result or {}
+        logger.info(f"Model information: {mdl.info()}")
+        return mdl.info()
     except RuntimeError as e:
         logger.error(f"Encountered an error while serving {model_id}: {str(e)}")
         logger.error(traceback.format_exc())
@@ -108,7 +105,8 @@ def close_model_helper(model_id: str) -> bool:
     try:
         logger.info(f"Closing model {model_id}...")
         mdl = Model(model_id=model_id, verbose=True)
-        return mdl.close() or False
+        mdl.close()
+        return True
     except (Exception, SystemExit) as e:
         logger.error(
             f"Encountered an error closing model {model_id}: {str(e)}"

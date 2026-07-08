@@ -91,7 +91,7 @@ def test_serve_model_helper_success(mock_model_class):
     """Test serve_model_helper when serve succeeds."""
     mock_instance = MagicMock()
     mock_response = {"status": "ready", "url": "http://localhost:5000", "server": "pulled_docker"}
-    mock_instance.serve.return_value = mock_response
+    mock_instance.info.return_value = mock_response
     mock_model_class.return_value = mock_instance
 
     result = serve_model_helper("eos8v1a")
@@ -99,16 +99,6 @@ def test_serve_model_helper_success(mock_model_class):
     assert result == mock_response
     mock_instance.serve.assert_called_once()
 
-@patch("ersilia_mcp.utils.model_operations.Model")
-def test_serve_model_helper_failure(mock_model_class):
-    """Test serve_model_helper when serve returns None."""
-    mock_instance = MagicMock()
-    mock_instance.serve.return_value = None
-    mock_model_class.return_value = mock_instance
-
-    result = serve_model_helper("eos8v1a")
-
-    assert result == {}
 
 @patch("ersilia_mcp.utils.model_operations.Model")
 def test_serve_model_helper_runtime_error(mock_model_class):
@@ -134,28 +124,6 @@ def test_close_model_helper_success(mock_model_class):
     assert result is True
     mock_instance.close.assert_called_once()
 
-
-@patch("ersilia_mcp.utils.model_operations.Model")
-def test_close_model_helper_close_returns_false(mock_model_class):
-    """Test close_model_helper when close returns False."""
-    mock_instance = MagicMock()
-    mock_instance.close.return_value = False
-    mock_model_class.return_value = mock_instance
-
-    result = close_model_helper("eos8v1a")
-
-    assert result is False
-
-@patch("ersilia_mcp.utils.model_operations.Model")
-def test_close_model_helper_close_returns_false_when_close_returns_None(mock_model_class):
-    """Test close_model_helper when close returns False when Model.close() returns None."""
-    mock_instance = MagicMock()
-    mock_instance.close.return_value = None
-    mock_model_class.return_value = mock_instance
-
-    result = close_model_helper("eos8v1a")
-
-    assert result is False
 
 @patch("ersilia_mcp.utils.model_operations.Model")
 def test_close_model_helper_exception(mock_model_class):

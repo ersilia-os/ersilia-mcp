@@ -7,6 +7,34 @@ conda activate ersilia-mcp
 pip install -e ".[dev]"
 ```
 
+## Dependency Management
+
+This project uses Poetry and a lockfile to ensure consistent dependency resolution across different environments (CI, local dev, different OS runners).
+
+### Generating the lockfile
+
+When you add or update dependencies in `pyproject.toml`, regenerate the lockfile:
+
+```bash
+pip install poetry
+poetry lock
+```
+
+This creates `poetry.lock` with all transitive dependencies pinned to exact versions.
+
+### Using the lockfile
+
+**For development:** Install from the lockfile to match CI:
+```bash
+poetry install --all-extras
+```
+
+### When to regenerate
+
+- After updating `pyproject.toml`
+- When CI fails with dependency resolution errors
+- Periodically (e.g., quarterly) to pick up security patches
+
 ## Using the MCP server with Claude Code
 
 ### Auto registration

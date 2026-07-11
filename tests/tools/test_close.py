@@ -14,6 +14,7 @@ def test_close_model_tool_success():
         assert result.structured_content["result"] is True
         mock_close.assert_called_once_with("eos8v1a")
 
+
 def test_close_model_tool_failure():
     """Test the close_model tool fails and returns False."""
     with patch("ersilia_mcp.tools.close.close_model_helper") as mock_close:

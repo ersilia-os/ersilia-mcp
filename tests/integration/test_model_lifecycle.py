@@ -23,17 +23,23 @@ def test_model_complete_lifecycle():
 
     # Step 1: Fetch the model
     fetch_result = fetch_model_helper(model_id)
-    assert isinstance(fetch_result, bool), f"Fetch should return bool, got {type(fetch_result)}"
+    assert isinstance(fetch_result, bool), (
+        f"Fetch should return bool, got {type(fetch_result)}"
+    )
     assert fetch_result is True, f"Fetch failed for {model_id}"
 
     # Step 2: Check that model is fetched
     check_result = check_model_fetched_helper(model_id)
-    assert isinstance(check_result, bool), f"Check should return bool, got {type(check_result)}"
+    assert isinstance(check_result, bool), (
+        f"Check should return bool, got {type(check_result)}"
+    )
     assert check_result is True, f"Model {model_id} should be fetched"
 
     # Step 3: Serve the model
     serve_result = serve_model_helper(model_id)
-    assert isinstance(serve_result, dict), f"Serve should return dict, got {type(serve_result)}"
+    assert isinstance(serve_result, dict), (
+        f"Serve should return dict, got {type(serve_result)}"
+    )
     # TODO: Make this more specific once the API is updated
     assert serve_result is not None, f"Serve returned None for {model_id}"
 

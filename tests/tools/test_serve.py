@@ -12,7 +12,7 @@ def test_serve_model_tool_success():
         mock_response = {
             "server": "pulled_docker",
             "status": "ready",
-            "url": "http://localhost:5000"
+            "url": "http://localhost:5000",
         }
         mock_serve.return_value = mock_response
         result = asyncio.run(mcp.call_tool("serve_model", {"model": "eos8v1a"}))

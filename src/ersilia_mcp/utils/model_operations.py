@@ -83,14 +83,17 @@ def serve_model_helper(model_id: str) -> dict:
         logger.info(f"Serving model {model_id}...")
         mdl = Model(model_id=model_id, verbose=True)
         mdl.serve()
-        logger.info("Successfully served the model. You can run `docker ps` to manually confirm the model is served.")
+        logger.info(
+            "Successfully served the model. You can run `docker ps` to manually confirm the model is served."
+        )
         logger.info(f"Model information: {mdl.info()}")
         return mdl.info()
     except RuntimeError as e:
         logger.error(f"Encountered an error while serving {model_id}: {str(e)}")
         logger.error(traceback.format_exc())
         return {}
-    
+
+
 def close_model_helper(model_id: str) -> bool:
     """
     Close the current session and clean up associated resources.
@@ -108,8 +111,6 @@ def close_model_helper(model_id: str) -> bool:
         mdl.close()
         return True
     except (Exception, SystemExit) as e:
-        logger.error(
-            f"Encountered an error closing model {model_id}: {str(e)}"
-        )
+        logger.error(f"Encountered an error closing model {model_id}: {str(e)}")
         logger.error(traceback.format_exc())
         return False

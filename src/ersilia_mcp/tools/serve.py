@@ -6,6 +6,7 @@ from fastmcp import FastMCP
 
 from ersilia_mcp.utils.model_operations import serve_model_helper
 
+
 def register(mcp: FastMCP) -> None:
     """Register the model tools on the MCP server."""
 

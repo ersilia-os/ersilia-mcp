@@ -90,7 +90,11 @@ def test_check_model_fetched_helper_exception(mock_model_class):
 def test_serve_model_helper_success(mock_model_class):
     """Test serve_model_helper when serve succeeds."""
     mock_instance = MagicMock()
-    mock_response = {"status": "ready", "url": "http://localhost:5000", "server": "pulled_docker"}
+    mock_response = {
+        "status": "ready",
+        "url": "http://localhost:5000",
+        "server": "pulled_docker",
+    }
     mock_instance.info.return_value = mock_response
     mock_model_class.return_value = mock_instance
 

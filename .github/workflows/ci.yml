@@ -16,6 +16,9 @@ permissions:
 jobs:
   test-and-lint:
     runs-on: ubuntu-slim
+    defaults:
+      run:
+        shell: bash -el {0}
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -38,6 +41,9 @@ jobs:
           poetry run ruff format --check .
 
   integration:
+    defaults:
+      run:
+        shell: bash -el {0}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code

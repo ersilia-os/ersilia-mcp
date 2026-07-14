@@ -16,6 +16,9 @@ permissions:
 jobs:
   test-and-lint:
     runs-on: ubuntu-slim
+    defaults:
+      run:
+        shell: bash -el {0}
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
@@ -26,18 +29,22 @@ jobs:
         uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5
         with:
           python-version: ${{ matrix.python-version }}
-          auto-activate-base: true
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - name: Install poetry and dependencies
+        run: |
+          pip install poetry
+          poetry install --all-extras
       - name: Run unit tests
-        run: pytest -v -m "not integration"
+        run: poetry run pytest -v -m "not integration"
       - name: Lint with ruff
         run: |
-          ruff check .
-          ruff format --check .
+          poetry run ruff check .
+          poetry run ruff format --check .
 
   integration:
-    runs-on: ubuntu-slim
+    defaults:
+      run:
+        shell: bash -el {0}
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -45,8 +52,9 @@ jobs:
         uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5
         with:
           python-version: "3.12"
-          auto-activate-base: true
-      - name: Install dependencies
-        run: pip install -e ".[dev]"
+      - name: Install poetry and dependencies
+        run: |
+          pip install poetry
+          poetry install --all-extras
       - name: Run integration tests
-        run: pytest -v -m integration
+        run: poetry run pytest -v -m integration

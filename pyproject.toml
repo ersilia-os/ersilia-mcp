@@ -17,7 +17,7 @@ dependencies = [
   "fastmcp==3.4.3",
   "rich==15.0.0",
   "ersilia==0.1.59",
-  "requests==2.32.3",
+  "requests==2.34.2",
 ]
 
 [project.optional-dependencies]

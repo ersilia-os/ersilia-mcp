@@ -219,3 +219,6 @@ __marimo__/
 
 # Application logs
 logs/
+
+# Input files/prediction output
+*.csv

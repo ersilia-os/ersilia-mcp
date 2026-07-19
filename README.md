@@ -1,12 +1,20 @@
 # MCP server for the Ersilia Model Hub
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server built on the
-official FastMCP SDK. It lets MCP clients search the Ersilia Model Hub catalog,
-served over stdio.
+official FastMCP SDK. It lets MCP clients search the Ersilia Model Hub catalog
+and fetch, serve, and run its AI/ML models, all over stdio.
 
-| Primitive | Name               | Description                                   |
-| --------- | ------------------ | --------------------------------------------- |
-| Tool      | `search_model`     | Searches the Ersilia model hub catalog.       |
+| Primitive | Name                  | Description                                                  |
+| --------- | --------------------- | ----------------------------------------------------------- |
+| Tool      | `search_model`        | Searches the Ersilia model hub catalog by keyword.          |
+| Tool      | `fetch_model`         | Downloads a model to the local machine.                     |
+| Tool      | `check_model_fetched` | Reports whether a model has already been fetched.           |
+| Tool      | `serve_model`         | Starts a fetched model so it can accept predictions.        |
+| Tool      | `predict`             | Runs predictions with a served model and writes a CSV.      |
+| Tool      | `close_model`         | Stops a served model and frees its resources.               |
+
+A typical workflow is `search_model` → `fetch_model` → `serve_model` → `predict`
+→ `close_model`.
 
 ## Installation
 

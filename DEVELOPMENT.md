@@ -110,7 +110,7 @@ These test the MCP tools and utilities with mocked Ersilia API calls. Safe to ru
 pytest -v -m integration
 ```
 
-These call the live Ersilia Model Hub APIs to validate search and fetch operations against real data. Note: fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
+These call the live Ersilia Model Hub APIs to validate the full model lifecycle (search, fetch, serve, predict, close) against real data. Note: fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
 
 ## CI/CD
 

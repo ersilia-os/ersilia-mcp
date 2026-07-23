@@ -20,7 +20,7 @@ from ersilia_mcp.utils.predict import predict_helper
 @pytest.mark.integration
 def test_model_complete_lifecycle(tmp_path):
     """Test complete model lifecycle: fetch → check → serve → predict → close."""
-    model_id = "eos43d6"
+    model_id = "eos3b5e"
 
     # Step 1: Fetch the model
     fetch_result = fetch_model_helper(model_id)

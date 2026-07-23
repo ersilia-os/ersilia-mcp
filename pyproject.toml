@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ersilia-mcp"
 version = "0.1.0"
-description = "A Model Context Protocol (MCP) server for searching the Ersilia Model Hub"
+description = "A Model Context Protocol (MCP) server for searching, fetching, serving, and running Ersilia Model Hub models"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [

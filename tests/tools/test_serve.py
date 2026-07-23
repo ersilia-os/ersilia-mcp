@@ -16,7 +16,7 @@ def test_serve_model_tool_success():
         }
         mock_serve.return_value = mock_response
         result = asyncio.run(mcp.call_tool("serve_model", {"model": "eos8v1a"}))
-        assert result.structured_content["result"] == mock_response
+        assert result.structured_content == mock_response
         mock_serve.assert_called_once_with("eos8v1a")
 
 
@@ -25,5 +25,5 @@ def test_serve_model_tool_failure():
     with patch("ersilia_mcp.tools.serve.serve_model_helper") as mock_serve:
         mock_serve.return_value = {}
         result = asyncio.run(mcp.call_tool("serve_model", {"model": "invalid"}))
-        assert result.structured_content["result"] == {}
+        assert result.structured_content == {}
         mock_serve.assert_called_once_with("invalid")

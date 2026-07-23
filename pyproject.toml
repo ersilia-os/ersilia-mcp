@@ -1,13 +1,14 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core==2.4.0"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "ersilia-mcp"
 version = "0.1.0"
 description = "A Model Context Protocol (MCP) server for searching, fetching, serving, and running Ersilia Model Hub models"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 authors = [
   {name="Your Name", email="you@ersilia.io"}
 ]
@@ -29,8 +30,8 @@ dev = [
 [project.scripts]
 ersilia-mcp = "ersilia_mcp.server:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.poetry]
+packages = [{ include = "ersilia_mcp", from = "src" }]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -10,21 +10,21 @@ readme = "README.md"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 authors = [
-  {name="Your Name", email="you@ersilia.io"}
+  {name="Ersilia Open Source Initiative", email="hello@ersilia.io"}
 ]
 requires-python = ">=3.10,<4.0"
 
 dependencies = [
-  "fastmcp==3.4.3",
-  "rich==15.0.0",
-  "ersilia==0.1.59",
-  "requests==2.32.3",
+  "fastmcp>=3.4.3",
+  "rich>=15.0.0",
+  "ersilia>=0.1.59",
+  "requests>=2.32.3",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest==9.0.3",
-  "ruff==0.15.13",
+  "pytest>=9.0.3",
+  "ruff>=0.15.13",
 ]
 
 [project.scripts]

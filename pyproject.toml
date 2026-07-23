@@ -15,16 +15,16 @@ authors = [
 requires-python = ">=3.10,<4.0"
 
 dependencies = [
-  "fastmcp>=3.4.3",
+  "fastmcp>=3.4.4",
   "rich>=15.0.0",
   "ersilia>=0.1.59",
-  "requests>=2.32.3",
+  "requests>=2.34.2",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=9.0.3",
-  "ruff>=0.15.13",
+  "pytest>=9.1.1",
+  "ruff>=0.16.0",
 ]
 
 [project.scripts]

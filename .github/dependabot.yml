@@ -7,7 +7,7 @@ updates:
     commit-message:
       prefix: "ci(deps):"
 
-  - package-ecosystem: poetry
+  - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly

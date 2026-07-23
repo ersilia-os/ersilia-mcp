@@ -1,6 +1,6 @@
 """Integration test for complete model lifecycle (calls real Ersilia APIs).
 
-Tests the full workflow: fetch → check → serve → close
+Tests the full workflow: fetch → check → serve → predict → close
 
 Run with: pytest tests/integration/test_model_lifecycle.py -v
 Skip with: pytest -m "not integration"
@@ -14,11 +14,12 @@ from ersilia_mcp.utils.model_operations import (
     fetch_model_helper,
     serve_model_helper,
 )
+from ersilia_mcp.utils.predict import predict_helper
 
 
 @pytest.mark.integration
-def test_model_complete_lifecycle():
-    """Test complete model lifecycle: fetch → check → serve → close."""
+def test_model_complete_lifecycle(tmp_path):
+    """Test complete model lifecycle: fetch → check → serve → predict → close."""
     model_id = "eos43d6"
 
     # Step 1: Fetch the model
@@ -43,6 +44,24 @@ def test_model_complete_lifecycle():
     # TODO: Make this more specific once the API is updated
     assert serve_result is not None, f"Serve returned None for {model_id}"
 
-    # Step 4: Close the model service
+    # Step 4: Run a prediction against the served model
+    output_path = tmp_path / "predictions.csv"
+    predict_result = predict_helper(model_id, "CCO\nCCC", str(output_path))
+    assert isinstance(predict_result, dict), (
+        f"Predict should return dict, got {type(predict_result)}"
+    )
+    assert predict_result.get("num_predictions") == 2, (
+        f"Expected 2 predictions for {model_id}, got {predict_result}"
+    )
+    assert predict_result.get("output_path") == str(output_path), (
+        f"Predict wrote to unexpected path: {predict_result}"
+    )
+
+    # The written CSV should have a header plus one row per input
+    assert output_path.exists(), "Predict did not write the output file"
+    rows = output_path.read_text().splitlines()
+    assert len(rows) == 3, f"Expected header + 2 rows, got {len(rows)}: {rows}"
+
+    # Step 5: Close the model service
     close_result = close_model_helper(model_id)
     assert close_result is True

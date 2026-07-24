@@ -4,9 +4,10 @@ from unittest.mock import MagicMock, patch
 
 from ersilia_mcp.utils.model_operations import (
     check_model_fetched_helper,
+    close_model_helper,
+    delete_model_helper,
     fetch_model_helper,
     serve_model_helper,
-    close_model_helper,
 )
 
 
@@ -135,5 +136,27 @@ def test_close_model_helper_exception(mock_model_class):
     mock_model_class.side_effect = Exception("Connection error")
 
     result = close_model_helper("eos8v1a")
+
+    assert result is False
+
+
+@patch("ersilia_mcp.utils.model_operations.Model")
+def test_delete_model_helper_success(mock_model_class):
+    """Test delete_model_helper when delete succeeds."""
+    mock_instance = MagicMock()
+    mock_model_class.return_value = mock_instance
+
+    result = delete_model_helper("eos8v1a")
+
+    assert result is True
+    mock_instance.delete.assert_called_once()
+
+
+@patch("ersilia_mcp.utils.model_operations.Model")
+def test_delete_model_helper_exception(mock_model_class):
+    """Test delete_model_helper when an exception is raised."""
+    mock_model_class.side_effect = Exception("Deletion failed")
+
+    result = delete_model_helper("eos8v1a")
 
     assert result is False

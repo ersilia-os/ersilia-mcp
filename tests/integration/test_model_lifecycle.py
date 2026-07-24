@@ -1,6 +1,6 @@
 """Integration test for complete model lifecycle (calls real Ersilia APIs).
 
-Tests the full workflow: fetch → check → serve → predict → close
+Tests the full workflow: fetch → check → serve → predict → close -> delete
 
 Run with: pytest tests/integration/test_model_lifecycle.py -v
 Skip with: pytest -m "not integration"
@@ -11,6 +11,7 @@ import pytest
 from ersilia_mcp.utils.model_operations import (
     check_model_fetched_helper,
     close_model_helper,
+    delete_model_helper,
     fetch_model_helper,
     serve_model_helper,
 )
@@ -19,7 +20,7 @@ from ersilia_mcp.utils.predict import predict_helper
 
 @pytest.mark.integration
 def test_model_complete_lifecycle(tmp_path):
-    """Test complete model lifecycle: fetch → check → serve → predict → close."""
+    """Test complete model lifecycle: fetch → check → serve → predict → close -> delete."""
     model_id = "eos3b5e"
 
     # Step 1: Fetch the model
@@ -65,3 +66,9 @@ def test_model_complete_lifecycle(tmp_path):
     # Step 5: Close the model service
     close_result = close_model_helper(model_id)
     assert close_result is True
+
+    # Step 6: Delete the model
+    delete_result = delete_model_helper(model_id)
+    assert delete_result is True
+    check_result = check_model_fetched_helper(model_id)
+    assert check_result is False

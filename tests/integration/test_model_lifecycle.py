@@ -11,6 +11,7 @@ import pytest
 from ersilia_mcp.utils.model_operations import (
     check_model_fetched_helper,
     close_model_helper,
+    delete_model_helper,
     fetch_model_helper,
     serve_model_helper,
 )
@@ -65,3 +66,7 @@ def test_model_complete_lifecycle(tmp_path):
     # Step 5: Close the model service
     close_result = close_model_helper(model_id)
     assert close_result is True
+
+    # Step 6: Delete the model
+    delete_result = delete_model_helper(model_id)
+    assert delete_result is True

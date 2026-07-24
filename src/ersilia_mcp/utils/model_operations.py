@@ -114,3 +114,30 @@ def close_model_helper(model_id: str) -> bool:
         logger.error(f"Encountered an error closing model {model_id}: {str(e)}")
         logger.error(traceback.format_exc())
         return False
+
+
+def delete_model_helper(model_id: str) -> bool:
+    """
+    Delete a model from the Ersilia model hub.
+
+    Parameters
+    ----------
+    model_id : str
+        Model identifier (e.g., ``eos8v1a``).
+
+    Returns
+    -------
+    bool
+        True if the model was successfully deleted, False otherwise.
+    """
+    try:
+        logger.info(f"Deleting model {model_id}...")
+        mdl = Model(model_id=model_id)
+        result = mdl.delete()
+        if result:
+            logger.info(f"Successfully deleted model {model_id}")
+        return result
+    except (Exception, SystemExit) as e:
+        logger.error(f"Encountered an error deleting model {model_id}: {str(e)}")
+        logger.error(traceback.format_exc())
+        return False

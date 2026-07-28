@@ -1,7 +1,6 @@
 """Tests for the fetch_model and check_model_fetched tools."""
 
 import asyncio
-
 from unittest.mock import patch
 
 from ersilia_mcp.server import mcp

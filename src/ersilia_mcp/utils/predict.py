@@ -7,7 +7,7 @@ import traceback
 
 from ersilia.api import Model
 
-from ersilia_mcp.utils.logging import logger, log_conda_environment
+from ersilia_mcp.utils.logging import log_conda_environment, logger
 
 
 def parse_input(input_data: str) -> list:
@@ -40,7 +40,7 @@ def parse_input(input_data: str) -> list:
     return [line.strip() for line in lines if line.strip()]
 
 
-def predict_helper(model_id: str, input_data: str, output_path: str = None) -> dict:
+def predict_helper(model_id: str, input_data: str, output_path: str | None = None) -> dict:
     """
     Run predictions for a served model and write the results to a CSV file.
 
@@ -83,6 +83,6 @@ def predict_helper(model_id: str, input_data: str, output_path: str = None) -> d
             "columns": list(df.columns),
         }
     except (Exception, SystemExit) as e:
-        logger.error(f"Encountered an error while predicting with {model_id}: {str(e)}")
+        logger.error(f"Encountered an error while predicting with {model_id}: {e!s}")
         logger.error(traceback.format_exc())
         return {}

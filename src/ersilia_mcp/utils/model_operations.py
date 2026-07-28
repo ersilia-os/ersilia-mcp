@@ -4,7 +4,7 @@ import traceback
 
 from ersilia.api import Model
 
-from ersilia_mcp.utils.logging import logger, log_conda_environment
+from ersilia_mcp.utils.logging import log_conda_environment, logger
 
 
 def fetch_model_helper(model_id: str) -> bool:
@@ -33,7 +33,7 @@ def fetch_model_helper(model_id: str) -> bool:
             logger.info(f"Fetch completed for {model_id}")
         return mdl.is_fetched()
     except (Exception, SystemExit) as e:
-        logger.error(f"Error fetching model {model_id}: {str(e)}")
+        logger.error(f"Error fetching model {model_id}: {e!s}")
         logger.error(traceback.format_exc())
         return False
 
@@ -58,7 +58,7 @@ def check_model_fetched_helper(model_id: str) -> bool:
         return mdl.is_fetched()
     except (Exception, SystemExit) as e:
         logger.error(
-            f"Encountered an error while checking if {model_id} is fetched: {str(e)}"
+            f"Encountered an error while checking if {model_id} is fetched: {e!s}"
         )
         logger.error(traceback.format_exc())
         return False
@@ -89,7 +89,7 @@ def serve_model_helper(model_id: str) -> dict:
         logger.info(f"Model information: {mdl.info()}")
         return mdl.info()
     except RuntimeError as e:
-        logger.error(f"Encountered an error while serving {model_id}: {str(e)}")
+        logger.error(f"Encountered an error while serving {model_id}: {e!s}")
         logger.error(traceback.format_exc())
         return {}
 
@@ -111,7 +111,7 @@ def close_model_helper(model_id: str) -> bool:
         mdl.close()
         return True
     except (Exception, SystemExit) as e:
-        logger.error(f"Encountered an error closing model {model_id}: {str(e)}")
+        logger.error(f"Encountered an error closing model {model_id}: {e!s}")
         logger.error(traceback.format_exc())
         return False
 
@@ -137,6 +137,6 @@ def delete_model_helper(model_id: str) -> bool:
         logger.info(f"Successfully deleted model {model_id}")
         return True
     except (Exception, SystemExit) as e:
-        logger.error(f"Encountered an error deleting model {model_id}: {str(e)}")
+        logger.error(f"Encountered an error deleting model {model_id}: {e!s}")
         logger.error(traceback.format_exc())
         return False

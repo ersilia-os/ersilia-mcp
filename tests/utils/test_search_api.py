@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-
 from ersilia_mcp.utils.search_api import (
     format_search_results,
     search_catalog,

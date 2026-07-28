@@ -9,10 +9,11 @@ from ersilia_mcp.utils.logging import logger
 
 from fastmcp import FastMCP
 
-from ersilia_mcp.tools import close, fetch, predict, search, serve
+from ersilia_mcp.tools import close, delete, fetch, predict, search, serve
 
 mcp = FastMCP("ersilia-mcp")
 close.register(mcp)
+delete.register(mcp)
 fetch.register(mcp)
 predict.register(mcp)
 search.register(mcp)

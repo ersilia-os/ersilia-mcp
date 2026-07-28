@@ -12,9 +12,11 @@ and fetch, serve, and run its AI/ML models, all over stdio.
 | Tool      | `serve_model`         | Starts a fetched model so it can accept predictions.        |
 | Tool      | `predict`             | Runs predictions with a served model and writes a CSV.      |
 | Tool      | `close_model`         | Stops a served model and frees its resources.               |
+| Tool      | `delete_model`        | Deletes a fetched model from local storage.                 |
 
 A typical workflow is `search_model` → `fetch_model` → `serve_model` → `predict`
-→ `close_model`.
+→ `close_model`. You can optionally call `delete_model` to remove the model from
+local storage.
 
 ## Installation
 

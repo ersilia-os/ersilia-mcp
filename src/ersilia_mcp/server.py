@@ -5,11 +5,10 @@ them over stdio so that MCP clients (e.g. Claude Desktop) can spawn it as a
 subprocess.
 """
 
-from ersilia_mcp.utils.logging import logger
-
 from fastmcp import FastMCP
 
 from ersilia_mcp.tools import close, delete, fetch, predict, search, serve
+from ersilia_mcp.utils.logging import logger
 
 mcp = FastMCP("ersilia-mcp")
 close.register(mcp)

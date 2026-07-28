@@ -1,7 +1,6 @@
 """Tests for the delete_model tool."""
 
 import asyncio
-
 from unittest.mock import patch
 
 from ersilia_mcp.server import mcp

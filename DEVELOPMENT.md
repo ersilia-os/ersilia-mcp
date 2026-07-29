@@ -37,6 +37,8 @@ poetry install --all-extras
 
 ## Using the MCP server with Claude Code
 
+This project was testing with Claude Code, but this MCP server can be used with any model provider (Gemini, ChatGPT, Claude) that supports local stdio MCP servers.
+
 ### Auto registration
 
 The repo ships a project-scoped [`.mcp.json`](.mcp.json) that automatically configures

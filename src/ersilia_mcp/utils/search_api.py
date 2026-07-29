@@ -72,6 +72,6 @@ def search_catalog(query: str) -> str:
     except requests.RequestException as exc:
         logger.error("Search API request failed: %s", exc)
         return f"Search API request failed: {exc}"
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.error("Failed to search catalog: %s", exc)
         return f"Failed to search catalog: {exc}"

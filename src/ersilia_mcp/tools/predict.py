@@ -11,7 +11,9 @@ def register(mcp: FastMCP) -> None:
     """Register the predict tool on the MCP server."""
 
     @mcp.tool(timeout=900.0)
-    async def predict(model: str, input_data: str, output_path: str = None) -> dict:
+    async def predict(
+        model: str, input_data: str, output_path: str | None = None
+    ) -> dict:
         """Run predictions against a served model from the Ersilia model hub.
 
         The model must already be served (see the ``serve_model`` tool).

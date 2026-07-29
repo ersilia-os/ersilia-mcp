@@ -14,21 +14,13 @@ from pathlib import Path
 
 from rich.logging import RichHandler
 
+from ersilia_mcp.default import EOS_MCP
+
 SUCCESS = 25
 LOGS_DIR = "logs"
 LOG_FILENAME = "ersilia-mcp.log"
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(message)s"
 logging.addLevelName(SUCCESS, "SUCCESS")
-
-
-def _get_project_root() -> Path:
-    """Find the project root by looking for pyproject.toml."""
-    current = Path(__file__).resolve()
-    for parent in current.parents:
-        if (parent / "pyproject.toml").exists():
-            return parent
-    # Fallback: assume standard layout (src/package/utils/logging.py)
-    return current.parents[3]
 
 
 class ErsiliaLogger(logging.Logger):
@@ -43,7 +35,7 @@ class ErsiliaLogger(logging.Logger):
         """
         Configure the logger to write to a file in the logs/ directory.
 
-        Creates a logs/ directory if it doesn't exist and adds a TimedRotatingFileHandler
+        Creates a logs/ directory in EOS_MCP if it doesn't exist and adds a TimedRotatingFileHandler
         to write logs to ersilia-mcp.log. Rotates daily at midnight and keeps 7 days of logs.
 
         Returns
@@ -51,8 +43,8 @@ class ErsiliaLogger(logging.Logger):
         Path
             The path to the log file.
         """
-        log_dir_path = _get_project_root() / LOGS_DIR
-        log_dir_path.mkdir(exist_ok=True)
+        log_dir_path = Path(EOS_MCP) / LOGS_DIR  # $HOME/eos/mcp/logs
+        log_dir_path.mkdir(parents=True, exist_ok=True)
         log_filepath = log_dir_path / LOG_FILENAME
 
         file_handler = TimedRotatingFileHandler(

@@ -78,7 +78,7 @@ claude mcp add ersilia-mcp -- conda run --no-capture-output -n ersilia-mcp ersil
 ## Starting the server locally
 
 After registering, Claude should automatically start the MCP server as a subprocess.
-You can check this by running `ps aux | grep ersilia-mcp` or by running `/mcp` in the chatbox. Logs can be found in ersilia-mcp/logs/ersilia-mcp.log
+You can check this by running `ps aux | grep ersilia-mcp` or by running `/mcp` in the chatbox. Logs can be found in `$HOME/eos/mcp/logs`.
 
 If you don't see a running process or if `/mcp` is showing an error, you can debug this by starting the server manually:
 ```bash
@@ -122,4 +122,4 @@ Locally fetched/served models are stored in the `~/eos/` directory.
 To manually check which models are fetched, check `~/eos/repository/`.
 To manually check which models are served, check `~/eos/sessions/`.
 
-Note: Since we're using the ersilia python package, the ersilia CLI should also be installed in your conda environment.
+Note: Since we're using the ersilia python package, the ersilia CLI should also be installed in your conda environment. See [these docs](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/local-inference#using-the-ersilia-cli) for more information on using the CLI.

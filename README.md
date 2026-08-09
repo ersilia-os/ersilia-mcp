@@ -29,17 +29,19 @@ conda activate ersilia-mcp
 pip install .
 ```
 
-## Register with Claude Code
+## Client Setup & Registration
 
-The repo ships a [`.mcp.json`](.mcp.json) that auto-registers the server. Just verify it's running:
+This MCP server has been tested mainly on Claude (specifically using Claude Code), but it supports any Model Context Protocol (MCP) host or model provider (such as Gemini or ChatGPT) that supports local stdio MCP servers.
 
-```bash
-claude mcp list
-```
+**Note on Claude Code:** This repository is set up to be automatically configured with Claude Code out of the box. It includes a project-scoped `.mcp.json` configuration file so that when you run Claude Code in this workspace, the Ersilia MCP server is registered and started automatically.
 
-You should see `ersilia-mcp: ... - ✔ Connected`.
+Currently, we only have dedicated setup and registration documentation for:
+- [Claude Code Setup Guide](docs/mcp_setup/claude_code.md)
+- [Gemini Setup Guide](docs/mcp_setup/gemini.md)
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for manual registration, debugging, or development setup.
+We would love to receive documentation updates and setup guides for other MCP clients and platforms. If you have successfully set up this server with another client, please consider adding a new setup guide to `docs/mcp_setup/`! See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+
+For further details on manual registration, debugging, or full development setup, please see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## About the Ersilia Open Source Initiative
 

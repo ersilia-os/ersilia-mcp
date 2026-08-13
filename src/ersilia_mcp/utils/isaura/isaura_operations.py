@@ -72,7 +72,9 @@ def _csv_inputs(csv_path: str) -> list:
                 f"CSV must have an 'input' or 'smiles' column; "
                 f"found {reader.fieldnames}"
             )
-        return [row[column].strip() for row in reader if (row.get(column) or "").strip()]
+        return [
+            row[column].strip() for row in reader if (row.get(column) or "").strip()
+        ]
 
 
 def _inspect_cached(model_id: str, version: str, bucket: str, input_csv: str) -> list:

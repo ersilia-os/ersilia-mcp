@@ -35,23 +35,21 @@ poetry install --all-extras
 - When CI fails with dependency resolution errors
 - Periodically (e.g., quarterly) to pick up security patches
 
-## Using the MCP server with Claude Code
+## Client Setup & Registration
 
-### Auto registration
+This MCP server has been tested mainly on Claude (specifically using Claude Code), but it can be used with any model provider or host (Gemini, ChatGPT, Claude) that supports local stdio MCP servers.
 
-The repo ships a project-scoped [`.mcp.json`](.mcp.json) that automatically configures
-Claude to launch the MCP server over stdio:
+**Note on Claude Code:** This repository is set up to be automatically configured with Claude Code out of the box. It includes a project-scoped `.mcp.json` configuration file so that when you run Claude Code in this workspace, the Ersilia MCP server is registered and started automatically.
 
-```json
-{
-  "mcpServers": {
-    "ersilia-mcp": {
-      "command": "${CONDA_EXE:-conda}",
-      "args": ["run", "--no-capture-output", "-n", "ersilia-mcp", "ersilia-mcp"]
-    }
-  }
-}
-```
+Currently, we only have dedicated setup and registration documentation for:
+- [Claude Code Setup Guide](docs/mcp_setup/claude_code.md)
+- [Gemini Setup Guide](docs/mcp_setup/gemini.md)
+
+We would love to receive documentation updates and setup guides for other MCP clients and platforms. If you have successfully integrated this server with other environments, please feel free to submit a pull request with new client guides! See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+
+### Claude Code Registration Summary
+
+For quick reference, the repository ships a project-scoped [`.mcp.json`](.mcp.json) that automatically configures Claude Code to launch the MCP server over stdio.
 
 Verify the server is running:
 ```bash
@@ -60,20 +58,7 @@ claude mcp list
 
 You should see `ersilia-mcp: ... - ✔ Connected`.
 
-If you're using the Claude Code VS Code extension, you can also type `/mcp` in the chatbox.
-
-**Caveat:** If you have an older local registration (from `claude mcp add`), it may take
-precedence. To rely on the committed `.mcp.json`, remove the local registration:
-```bash
-claude mcp remove ersilia-mcp
-```
-
-### Manual registration
-
-To register manually (e.g. for a different environment name):
-```bash
-claude mcp add ersilia-mcp -- conda run --no-capture-output -n ersilia-mcp ersilia-mcp
-```
+For a full step-by-step walkthrough of automatic vs. manual registration, caveats, and extension setups, refer to the [Claude Code Setup Guide](docs/mcp_setup/claude_code.md).
 
 ## Starting the server locally
 

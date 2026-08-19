@@ -222,3 +222,6 @@ logs/
 
 # Input files/prediction output
 *.csv
+
+# Gemini CLI configuration files
+.gemini/

@@ -44,7 +44,7 @@ To maintain high code quality and respect the time of our maintainers, we ask th
 * Avoid copying and pasting large, unreviewed blocks of AI-generated code directly into a Pull Request. We value thoughtful, verified solutions over raw AI outputs.
 * Feel free to use AI to help draft your Pull Request descriptions or issue comments, but please read them over first. Make sure the text accurately reflects your work, reads naturally, and clearly explains your changes.
 * AI tools can occasionally hallucinate or invent fake packages and functions. Please double-check your dependencies and test your code locally before submitting.
-
+* Please mention in the PR description if AI substantially helped create your changes.
 ## Create a new Issue 🚀
 
 The issue tracking avoids duplications and prevents different contributors working on the same feature separately, so please make sure to create a new issue with the appropriate labels before jumping on coding! You can create the following issue types:

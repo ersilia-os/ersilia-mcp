@@ -1,6 +1,6 @@
 """Integration test for complete model lifecycle (calls real Ersilia APIs).
 
-Tests the full workflow: fetch → check → serve → predict → close -> delete
+Tests the full workflow: fetch → check → serve → generate_inputs → predict → close -> delete
 
 Run with: pytest tests/integration/test_model_lifecycle.py -v
 Skip with: pytest -m "not integration"
@@ -8,6 +8,7 @@ Skip with: pytest -m "not integration"
 
 import pytest
 
+from ersilia_mcp.utils.generate_inputs import generate_inputs_helper
 from ersilia_mcp.utils.model_operations import (
     check_model_fetched_helper,
     close_model_helper,
@@ -20,7 +21,7 @@ from ersilia_mcp.utils.predict import predict_helper
 
 @pytest.mark.integration
 def test_model_complete_lifecycle(tmp_path):
-    """Test complete model lifecycle: fetch → check → serve → predict → close -> delete."""
+    """Test complete model lifecycle: fetch → check → serve → generate_inputs → predict → close -> delete."""
     model_id = "eos3b5e"
 
     # Step 1: Fetch the model
@@ -45,14 +46,24 @@ def test_model_complete_lifecycle(tmp_path):
     # TODO: Make this more specific once the API is updated
     assert serve_result is not None, f"Serve returned None for {model_id}"
 
-    # Step 4: Run a prediction against the served model
+    # Step 4: Generate example inputs from the served model
+    n_samples = 2
+    samples = generate_inputs_helper(model_id, n_samples=n_samples, mode="random")
+    assert isinstance(samples, list), (
+        f"Generate should return list, got {type(samples)}"
+    )
+    assert len(samples) == n_samples, (
+        f"Expected {n_samples} samples for {model_id}, got {samples}"
+    )
+
+    # Step 5: Run a prediction against the served model using the generated inputs
     output_path = tmp_path / "predictions.csv"
-    predict_result = predict_helper(model_id, "CCO\nCCC", str(output_path))
+    predict_result = predict_helper(model_id, "\n".join(samples), str(output_path))
     assert isinstance(predict_result, dict), (
         f"Predict should return dict, got {type(predict_result)}"
     )
-    assert predict_result.get("num_predictions") == 2, (
-        f"Expected 2 predictions for {model_id}, got {predict_result}"
+    assert predict_result.get("num_predictions") == n_samples, (
+        f"Expected {n_samples} predictions for {model_id}, got {predict_result}"
     )
     assert predict_result.get("output_path") == str(output_path), (
         f"Predict wrote to unexpected path: {predict_result}"
@@ -61,13 +72,15 @@ def test_model_complete_lifecycle(tmp_path):
     # The written CSV should have a header plus one row per input
     assert output_path.exists(), "Predict did not write the output file"
     rows = output_path.read_text().splitlines()
-    assert len(rows) == 3, f"Expected header + 2 rows, got {len(rows)}: {rows}"
+    assert len(rows) == n_samples + 1, (
+        f"Expected header + {n_samples} rows, got {len(rows)}: {rows}"
+    )
 
-    # Step 5: Close the model service
+    # Step 6: Close the model service
     close_result = close_model_helper(model_id)
     assert close_result is True
 
-    # Step 6: Delete the model
+    # Step 7: Delete the model
     delete_result = delete_model_helper(model_id)
     assert delete_result is True
     check_result = check_model_fetched_helper(model_id)

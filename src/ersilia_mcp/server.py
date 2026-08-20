@@ -8,6 +8,7 @@ subprocess.
 from fastmcp import FastMCP
 
 from ersilia_mcp.tools import close, delete, fetch, predict, search, serve
+from ersilia_mcp.tools.isaura import isaura_reader
 from ersilia_mcp.utils.logging import logger
 
 mcp = FastMCP("ersilia-mcp")
@@ -17,6 +18,7 @@ fetch.register(mcp)
 predict.register(mcp)
 search.register(mcp)
 serve.register(mcp)
+isaura_reader.register(mcp)
 
 
 def main() -> None:

@@ -17,8 +17,8 @@ from ersilia_mcp.utils.logging import logger
 
 # Columns Isaura accepts as the molecule/lookup key, in priority order.
 _INPUT_COLUMNS = ("input", "smiles")
-# Cap the ``missing`` list returned to callers so the payload stays small.
-_MAX_MISSING_REPORTED = 20
+# Cap the input lists returned to callers so the payload stays small.
+_MAX_REPORTED = 20
 
 
 def _write_input_csv(inputs: list) -> str:
@@ -75,6 +75,33 @@ def _csv_inputs(csv_path: str) -> list:
         return [
             row[column].strip() for row in reader if (row.get(column) or "").strip()
         ]
+
+
+def _resolve_inputs(input_data: str) -> tuple:
+    """
+    Turn the tool input into requested inputs and a CSV Isaura can read.
+
+    Parameters
+    ----------
+    input_data : str
+        Either a path to a CSV with an ``input``/``smiles`` column, or a
+        comma-separated string of inputs.
+
+    Returns
+    -------
+    tuple
+        ``(requested, source_csv, temp_input_csv)`` where ``requested`` is the
+        list of parsed inputs, ``source_csv`` is a CSV path Isaura can read
+        (``None`` when there are no inputs), and ``temp_input_csv`` is a path
+        the caller must delete (``None`` when a user-supplied CSV was reused).
+    """
+    if os.path.isfile(input_data):
+        return _csv_inputs(input_data), input_data, None
+    requested = [s.strip() for s in input_data.split(",") if s.strip()]
+    if not requested:
+        return [], None, None
+    temp_input_csv = _write_input_csv(requested)
+    return requested, temp_input_csv, temp_input_csv
 
 
 def _inspect_cached(model_id: str, version: str, bucket: str, input_csv: str) -> list:
@@ -161,19 +188,10 @@ def read(
     temp_input_csv = None
     subset_csv = None
     try:
-        if os.path.isfile(input_data):
-            source_csv = input_data
-            requested = _csv_inputs(input_data)
-        else:
-            requested = [s.strip() for s in input_data.split(",") if s.strip()]
-            source_csv = None
-
+        requested, source_csv, temp_input_csv = _resolve_inputs(input_data)
         if not requested:
             logger.error("No valid inputs found to read")
             return {"status": "error", "error": "No valid inputs provided"}
-
-        if source_csv is None:
-            source_csv = temp_input_csv = _write_input_csv(requested)
 
         logger.info(
             f"Inspecting {len(requested)} input(s) of model {model_id} "
@@ -189,7 +207,7 @@ def read(
             "num_requested": len(requested),
             "num_cached": len(cached),
             "num_missing": len(missing),
-            "missing": missing[:_MAX_MISSING_REPORTED],
+            "missing": missing[:_MAX_REPORTED],
             "output_path": None,
             "columns": [],
         }
@@ -233,3 +251,79 @@ def read(
         for path in (temp_input_csv, subset_csv):
             if path is not None and os.path.exists(path):
                 os.remove(path)
+
+
+def inspect(
+    model_id: str,
+    input_data: str,
+    version: str = "v1",
+    bucket: str = "isaura-public",
+) -> dict:
+    """
+    Report which inputs are cached in Isaura without retrieving their results.
+
+    This is the inspection half of :func:`read`: it looks up availability but
+    does not fetch or write any results, so it is a cheap way to see how much
+    of a workload can be served from the cache.
+
+    Parameters
+    ----------
+    model_id : str
+        Model identifier (e.g., ``eos3b5e``).
+    input_data : str
+        Either a path to a CSV with an ``input``/``smiles`` column, or a
+        comma-separated string of inputs.
+    version : str, optional
+        Model version to inspect, by default ``"v1"``.
+    bucket : str, optional
+        Project bucket to inspect, by default ``"isaura-public"``.
+
+    Returns
+    -------
+    dict
+        On success::
+
+            {
+                "status": "ok",
+                "num_requested": int,
+                "num_cached": int,
+                "num_missing": int,
+                "cached": list,   # up to 20 inputs that are cached
+                "missing": list,  # up to 20 inputs that are not cached
+            }
+
+        On failure (e.g. the local store is unreachable)::
+
+            {"status": "error", "error": str}
+    """
+    temp_input_csv = None
+    try:
+        requested, source_csv, temp_input_csv = _resolve_inputs(input_data)
+        if not requested:
+            logger.error("No valid inputs found to inspect")
+            return {"status": "error", "error": "No valid inputs provided"}
+
+        logger.info(
+            f"Inspecting {len(requested)} input(s) of model {model_id} "
+            f"({version}) in bucket {bucket}"
+        )
+        cached = _inspect_cached(model_id, version, bucket, source_csv)
+        cached_set = set(cached)
+        missing = [value for value in requested if value not in cached_set]
+        logger.info(f"{len(cached)} cached, {len(missing)} missing")
+
+        return {
+            "status": "ok",
+            "num_requested": len(requested),
+            "num_cached": len(cached),
+            "num_missing": len(missing),
+            "cached": cached[:_MAX_REPORTED],
+            "missing": missing[:_MAX_REPORTED],
+        }
+    except (Exception, SystemExit) as e:  # noqa: BLE001
+        logger.error(f"Error inspecting cache for {model_id}: {e!s}")
+        logger.error(traceback.format_exc())
+        return {"status": "error", "error": str(e)}
+    finally:
+        if temp_input_csv is not None and os.path.exists(temp_input_csv):
+            os.remove(temp_input_csv)

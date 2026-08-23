@@ -214,8 +214,10 @@ def read(
         if not cached:
             return result
 
-        # Read only the cached inputs so a missing one can't abort the read.
-        # When nothing is missing, ``source_csv`` already holds exactly those.
+        # Write the cached inputs to a temp csv file.
+        # Since we pass approximate=False and since the mcp server runs on stdio,
+        # un-cached inputs will cause the read to error.
+        # When everything is cached in isaura, we can use ``source_csv`` directly.
         if missing:
             read_csv = subset_csv = _write_input_csv(cached)
         else:

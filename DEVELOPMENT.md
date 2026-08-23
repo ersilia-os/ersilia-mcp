@@ -4,7 +4,7 @@
 conda create -n ersilia-mcp python=3.12
 conda activate ersilia-mcp
 # for local development
-pip install -e ".[dev]"
+poetry install --all-extras
 ```
 
 ## Dependency Management
@@ -107,8 +107,8 @@ isaura engine --stop
 
 Run ruff to check and format code:
 ```bash
-ruff check .
-ruff format .
+poetry run ruff check .
+poetry run ruff format .
 ```
 
 ## Tests
@@ -117,14 +117,14 @@ The test suite is split into two categories:
 
 **Unit tests** (fast, safe, run offline):
 ```bash
-pytest -v -m "not integration"
+poetry run pytest -v -m "not integration"
 ```
 
 These test the MCP tools and utilities with mocked Ersilia API calls. Safe to run locally without side effects.
 
 **Integration tests** (slower, hit real APIs, mark with `@pytest.mark.integration`):
 ```bash
-pytest -v -m integration
+poetry run pytest -v -m integration
 ```
 
 These call the live Ersilia Model Hub APIs to validate the full model lifecycle (search, fetch, serve, predict, close, delete) against real data. Note: fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.

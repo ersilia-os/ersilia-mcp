@@ -102,6 +102,7 @@ def test_model_complete_lifecycle(tmp_path):
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert write.returncode == 0, f"isaura write failed: {write.stderr}"
 

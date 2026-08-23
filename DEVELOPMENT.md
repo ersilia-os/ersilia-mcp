@@ -75,7 +75,7 @@ ersilia-mcp
 
 TODO: Remove CLI commands as we add new mcp tools
 
-The `read_precalculations` tool reads cached model outputs from a local
+The `get_precalculations` tool reads cached model outputs from a local
 [Isaura](https://github.com/ersilia-os/isaura) store (a MinIO instance managed
 by Isaura over Docker). Docker must be running.
 

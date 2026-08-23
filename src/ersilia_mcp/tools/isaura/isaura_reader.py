@@ -1,4 +1,4 @@
-"""The ``read_precalculations`` tool for retrieving results from Isaura."""
+"""The ``get_precalculations`` tool for retrieving results from Isaura."""
 
 import asyncio
 
@@ -11,7 +11,7 @@ def register(mcp: FastMCP) -> None:
     """Register the Isaura read tool on the MCP server."""
 
     @mcp.tool(timeout=300.0)
-    async def read_precalculations(
+    async def get_precalculations(
         model: str,
         input_data: str,
         version: str = "v1",

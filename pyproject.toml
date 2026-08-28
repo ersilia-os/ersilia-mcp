@@ -19,6 +19,7 @@ dependencies = [
   "rich>=15.0.0",
   "ersilia>=0.1.59",
   "requests>=2.34.2",
+  "isaura>=2.4.1",
 ]
 
 [project.optional-dependencies]

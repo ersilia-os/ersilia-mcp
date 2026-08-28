@@ -7,13 +7,22 @@ subprocess.
 
 from fastmcp import FastMCP
 
-from ersilia_mcp.tools import close, delete, fetch, predict, search, serve
+from ersilia_mcp.tools import (
+    close,
+    delete,
+    fetch,
+    generate_inputs,
+    predict,
+    search,
+    serve,
+)
 from ersilia_mcp.utils.logging import logger
 
 mcp = FastMCP("ersilia-mcp")
 close.register(mcp)
 delete.register(mcp)
 fetch.register(mcp)
+generate_inputs.register(mcp)
 predict.register(mcp)
 search.register(mcp)
 serve.register(mcp)

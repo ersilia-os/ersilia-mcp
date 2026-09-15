@@ -4,7 +4,7 @@
 conda create -n ersilia-mcp python=3.12
 conda activate ersilia-mcp
 # for local development
-pip install -e ".[dev]"
+poetry install --all-extras
 ```
 
 ## Dependency Management
@@ -71,12 +71,44 @@ conda activate ersilia-mcp
 ersilia-mcp
 ```
 
+## Isaura precalculation store
+
+TODO: Remove CLI commands as we add new mcp tools
+
+The `get_precalculations` tool reads cached model outputs from a local
+[Isaura](https://github.com/ersilia-os/isaura) store (a MinIO instance managed
+by Isaura over Docker). Docker must be running.
+
+Start the local store — this creates the reserved `isaura-public` and
+`isaura-private` buckets:
+```bash
+isaura engine --start        # start local MinIO
+isaura engine                # show Docker + MinIO status
+isaura configure --test-credentials   # verify local (and cloud) connectivity
+```
+
+The store is empty on first start. Populate it by writing model outputs (the
+CSV must have an `input` or `smiles` column — e.g. the output of the `predict`
+tool):
+```bash
+isaura write -i data/eos3b5e_output.csv -m eos3b5e -v v1 -pn isaura-public
+```
+
+Stop the store when you're done:
+```bash
+isaura engine --stop
+```
+
+> After editing tool code, reinstall (`pip install -e .`) and reconnect the MCP
+> server (`/mcp reconnect` in the client) so the running subprocess picks up
+> the changes — otherwise it keeps serving the previously imported code.
+
 ## Linting and Code Quality
 
 Run ruff to check and format code:
 ```bash
-ruff check .
-ruff format .
+poetry run ruff check .
+poetry run ruff format .
 ```
 
 ## Tests
@@ -85,14 +117,14 @@ The test suite is split into two categories:
 
 **Unit tests** (fast, safe, run offline):
 ```bash
-pytest -v -m "not integration"
+poetry run pytest -v -m "not integration"
 ```
 
 These test the MCP tools and utilities with mocked Ersilia API calls. Safe to run locally without side effects.
 
 **Integration tests** (slower, hit real APIs, mark with `@pytest.mark.integration`):
 ```bash
-pytest -v -m integration
+poetry run pytest -v -m integration
 ```
 
 These call the live Ersilia Model Hub APIs to validate the full model lifecycle (search, fetch, serve, generate_inputs, predict, close, delete) against real data. Note: fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.

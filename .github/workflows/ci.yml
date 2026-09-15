@@ -58,5 +58,12 @@ jobs:
         run: |
           pip install poetry
           poetry install --all-extras
+      - name: Start the Isaura store
+        run: |
+          poetry run isaura engine --start
+          poetry run isaura configure --test-credentials
       - name: Run integration tests
         run: poetry run pytest -v -m integration
+      - name: Stop the Isaura store
+        if: always()
+        run: poetry run isaura engine --stop

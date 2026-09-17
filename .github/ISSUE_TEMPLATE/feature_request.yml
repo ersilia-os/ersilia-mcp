@@ -1,0 +1,13 @@
+name: 📑 Feature Request
+description: Suggest an idea for this project
+title: "📑 Feature Request: "
+labels: [enhancement]
+
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for taking the time to file a Feature Request report.
+  - type: textarea
+    attributes:
+      label: Describe your feature request.
+      description: 'A clear description of what you would like us to build and how will it affect you.'

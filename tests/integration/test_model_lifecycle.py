@@ -1,7 +1,6 @@
 """Integration test for complete model lifecycle (calls real Ersilia APIs).
 
-Tests the full workflow:
-fetch → check → serve → predict → cache → inspect → read → close → delete
+Tests the full workflow: fetch → check → serve → generate_inputs → predict → close -> delete
 
 The cache/inspect/read steps require a running Isaura store (``isaura engine
 --start``); see DEVELOPMENT.md.
@@ -17,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from ersilia_mcp.utils.isaura import isaura_operations
+from ersilia_mcp.utils.generate_inputs import generate_inputs_helper
 from ersilia_mcp.utils.model_operations import (
     check_model_fetched_helper,
     close_model_helper,
@@ -65,14 +65,24 @@ def test_model_complete_lifecycle(tmp_path):
     # TODO: Make this more specific once the API is updated
     assert serve_result is not None, f"Serve returned None for {model_id}"
 
-    # Step 4: Run a prediction against the served model
+    # Step 4: Generate example inputs from the served model
+    n_samples = 2
+    samples = generate_inputs_helper(model_id, n_samples=n_samples, mode="random")
+    assert isinstance(samples, list), (
+        f"Generate should return list, got {type(samples)}"
+    )
+    assert len(samples) == n_samples, (
+        f"Expected {n_samples} samples for {model_id}, got {samples}"
+    )
+
+    # Step 5: Run a prediction against the served model using the generated inputs
     output_path = tmp_path / "predictions.csv"
-    predict_result = predict_helper(model_id, "\n".join(test_inputs), str(output_path))
+    predict_result = predict_helper(model_id, "\n".join(samples), str(output_path))
     assert isinstance(predict_result, dict), (
         f"Predict should return dict, got {type(predict_result)}"
     )
-    assert predict_result.get("num_predictions") == len(test_inputs), (
-        f"Expected {len(test_inputs)} predictions for {model_id}, got {predict_result}"
+    assert predict_result.get("num_predictions") == n_samples, (
+        f"Expected {n_samples} predictions for {model_id}, got {predict_result}"
     )
     assert predict_result.get("output_path") == str(output_path), (
         f"Predict wrote to unexpected path: {predict_result}"
@@ -127,8 +137,8 @@ def test_model_complete_lifecycle(tmp_path):
     )
     assert cache_output.exists(), "Read did not write the cached results file"
     cache_rows = cache_output.read_text().splitlines()
-    assert len(cache_rows) == len(test_inputs) + 1, (
-        f"Expected header + {len(test_inputs)} rows, got {len(cache_rows)}: {cache_rows}"
+    assert len(cache_rows) == n_samples + 1, (
+        f"Expected header + {n_samples} rows, got {len(cache_rows)}: {cache_rows}"
     )
 
     # Step 8: Close the model service

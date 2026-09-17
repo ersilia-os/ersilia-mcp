@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "ersilia-mcp"
-version = "0.1.0"
+version = "1.0.0"
 description = "A Model Context Protocol (MCP) server for searching, fetching, serving, and running Ersilia Model Hub models"
 readme = "README.md"
 license = "GPL-3.0-or-later"

@@ -10,17 +10,27 @@ and fetch, serve, and run its AI/ML models, all over stdio.
 | Tool      | `fetch_model`         | Downloads a model to the local machine.                     |
 | Tool      | `check_model_fetched` | Reports whether a model has already been fetched.           |
 | Tool      | `serve_model`         | Starts a fetched model so it can accept predictions.        |
+| Tool      | `generate_inputs`     | Samples example inputs from a served model.                 |
 | Tool      | `predict`             | Runs predictions with a served model and writes a CSV.      |
 | Tool      | `close_model`         | Stops a served model and frees its resources.               |
 | Tool      | `delete_model`        | Deletes a fetched model from local storage.                 |
 
 A typical workflow is `search_model` → `fetch_model` → `serve_model` → `predict`
-→ `close_model`. You can optionally call `delete_model` to remove the model from
-local storage.
+→ `close_model`. You can optionally call `generate_inputs` after serving to
+sample example inputs to feed into `predict`, and `delete_model` to remove the
+model from local storage.
 
 ## Installation
 
-Prerequisite: Ensure you have [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation) installed (miniconda is fine).
+Ensure you have the following installed:
+* [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation) (miniconda is fine)
+* [Docker](https://docs.docker.com/get-docker/)
+* [git](https://git-scm.com/install/source)
+
+Clone the repository locally using git:
+```bash
+git clone git@github.com:ersilia-os/ersilia-mcp.git
+```
 
 Create a new virtual conda environment, activate it, and install the necessary packages:
 ```bash

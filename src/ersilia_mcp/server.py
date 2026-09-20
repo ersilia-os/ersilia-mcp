@@ -16,6 +16,7 @@ from ersilia_mcp.tools import (
     search,
     serve,
 )
+from ersilia_mcp.tools.isaura import isaura_inspect
 from ersilia_mcp.utils.logging import logger
 
 mcp = FastMCP("ersilia-mcp")
@@ -26,6 +27,7 @@ generate_inputs.register(mcp)
 predict.register(mcp)
 search.register(mcp)
 serve.register(mcp)
+isaura_inspect.register(mcp)
 
 
 def main() -> None:

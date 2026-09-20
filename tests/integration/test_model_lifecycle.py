@@ -27,14 +27,18 @@ from ersilia_mcp.utils.model_operations import (
 from ersilia_mcp.utils.predict import predict_helper
 
 
-def _isaura_cli() -> str:
-    """Resolve the ``isaura`` console script next to the running interpreter.
+def _isaura_cli() -> list:
+    """Build the command prefix that runs the ``isaura`` console script.
 
     The CLI is installed alongside ``python`` in the active env, which isn't
-    guaranteed to be on ``PATH`` when pytest is launched directly.
+    guaranteed to be on ``PATH`` when pytest is launched directly. The script
+    is run *through* that interpreter rather than executed directly: a console
+    script whose shebang was never rewritten from ``#!python`` cannot be
+    exec'd, and ``subprocess`` reports the script itself as missing even
+    though it exists.
     """
     candidate = Path(sys.executable).parent / "isaura"
-    return str(candidate) if candidate.exists() else "isaura"
+    return [sys.executable, str(candidate)] if candidate.exists() else ["isaura"]
 
 
 @pytest.mark.integration
@@ -98,7 +102,7 @@ def test_model_complete_lifecycle(tmp_path):
     # TODO: Update this to use a isaura_write tool once we add that tool
     write = subprocess.run(
         [
-            _isaura_cli(),
+            *_isaura_cli(),
             "write",
             "-i",
             str(output_path),

@@ -68,6 +68,8 @@ def test_inspect_isaura_cache_tool_error():
     with patch(_INSPECT) as mock_inspect:
         mock_inspect.return_value = {"status": "error", "error": "store unreachable"}
         result = asyncio.run(
-            mcp.call_tool("inspect_isaura_cache", {"model": "eos3b5e", "input_data": "CCO"})
+            mcp.call_tool(
+                "inspect_isaura_cache", {"model": "eos3b5e", "input_data": "CCO"}
+            )
         )
         assert result.structured_content["status"] == "error"

@@ -177,8 +177,8 @@ def test_read_all_cached_writes_results(mock_cached, mock_reader_class, tmp_path
 
 @patch(f"{_OPS}.IsauraReader")
 @patch(f"{_OPS}._inspect_cached")
-def test_read_partial_cached_reports_missing(mock_cached, mock_reader_class, tmp_path):
-    """Test read retrieves only the cached subset and reports missing inputs."""
+def test_read_partial_cached_counts_missing(mock_cached, mock_reader_class, tmp_path):
+    """Test read retrieves only the cached subset and counts missing inputs."""
     mock_cached.return_value = ["CCO"]
     df = pd.DataFrame({"input": ["CCO"], "value": [1.0]})
     mock_reader_class.return_value.__enter__.return_value.read.return_value = df
@@ -188,8 +188,23 @@ def test_read_partial_cached_reports_missing(mock_cached, mock_reader_class, tmp
 
     assert result["num_cached"] == 1
     assert result["num_missing"] == 1
-    assert result["missing"] == ["CCC"]
+    assert "missing" not in result
     assert output_path.exists()
+
+
+@patch(f"{_OPS}.IsauraReader")
+@patch(f"{_OPS}._inspect_cached")
+def test_read_verbose_includes_missing(mock_cached, mock_reader_class, tmp_path):
+    """Test read lists the uncached inputs when verbose."""
+    mock_cached.return_value = ["CCO"]
+    df = pd.DataFrame({"input": ["CCO"], "value": [1.0]})
+    mock_reader_class.return_value.__enter__.return_value.read.return_value = df
+
+    output_path = tmp_path / "out.csv"
+    result = read("eos3b5e", "CCO,CCC", output_path=str(output_path), verbose=True)
+
+    assert result["num_missing"] == 1
+    assert result["missing"] == ["CCC"]
 
 
 @patch(f"{_OPS}.IsauraReader")
@@ -201,6 +216,16 @@ def test_read_nothing_cached_skips_reader(mock_cached, mock_reader_class):
     assert result["num_cached"] == 0
     assert result["output_path"] is None
     assert result["columns"] == []
+    mock_reader_class.assert_not_called()
+
+
+@patch(f"{_OPS}.IsauraReader")
+@patch(f"{_OPS}._inspect_cached")
+def test_read_verbose_lists_missing_when_nothing_cached(mock_cached, mock_reader_class):
+    """Test the early return still lists every input when verbose."""
+    mock_cached.return_value = []
+    result = read("eos3b5e", "CCO,CCC", verbose=True)
+    assert result["missing"] == ["CCO", "CCC"]
     mock_reader_class.assert_not_called()
 
 

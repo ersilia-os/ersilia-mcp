@@ -135,12 +135,13 @@ def read(
     version: str = "v1",
     bucket: str = "isaura-public",
     output_path: str | None = None,
+    verbose: bool = False,
 ) -> dict:
     """
     Check which inputs are cached in Isaura and retrieve those results.
 
     Inputs are first inspected for availability; only the cached subset is
-    retrieved. Missing inputs are reported rather than causing the read to fail.
+    retrieved. Missing inputs are counted rather than causing the read to fail.
 
     Parameters
     ----------
@@ -156,6 +157,9 @@ def read(
     output_path : str, optional
         Where to write the retrieved results CSV. Only written when at least
         one input is cached; if omitted, a temporary file is created.
+    verbose : bool, optional
+        When ``True``, also return the full list of inputs that were not
+        cached. By default only the counts are returned.
 
     Returns
     -------
@@ -167,9 +171,10 @@ def read(
                 "num_requested": int,
                 "num_cached": int,
                 "num_missing": int,
-                "missing": list,      # up to 20 inputs not cached
                 "output_path": str | None,  # None when nothing was cached
                 "columns": list,
+                # only present when verbose=True:
+                "missing": list,  # every input not cached
             }
 
         On failure (e.g. the local store is unreachable)::
@@ -199,10 +204,11 @@ def read(
             "num_requested": len(requested),
             "num_cached": len(cached),
             "num_missing": len(missing),
-            "missing": missing,
             "output_path": None,
             "columns": [],
         }
+        if verbose:
+            result["missing"] = missing
         if not cached:
             return result
 

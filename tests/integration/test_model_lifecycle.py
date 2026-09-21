@@ -1,6 +1,7 @@
 """Integration test for complete model lifecycle (calls real Ersilia APIs).
 
-Tests the full workflow: fetch → check → serve → generate_inputs → predict → close -> delete
+Tests the full workflow: fetch → check → serve → generate_inputs → predict →
+cache → inspect → read → close → delete
 
 The cache/inspect/read steps require a running Isaura store (``isaura engine
 --start``); see DEVELOPMENT.md.
@@ -9,6 +10,7 @@ Run with: pytest tests/integration/test_model_lifecycle.py -v
 Skip with: pytest -m "not integration"
 """
 
+import csv
 import subprocess
 import sys
 from pathlib import Path
@@ -98,7 +100,7 @@ def test_model_complete_lifecycle(tmp_path):
         f"Expected header + {n_samples} rows, got {len(rows)}: {rows}"
     )
 
-    # Step 5: Cache the predictions in the Isaura store via the CLI
+    # Step 6: Cache the predictions in the Isaura store via the CLI
     # TODO: Update this to use a isaura_write tool once we add that tool
     write = subprocess.run(
         [
@@ -119,7 +121,7 @@ def test_model_complete_lifecycle(tmp_path):
     )
     assert write.returncode == 0, f"isaura write failed: {write.stderr}"
 
-    # Step 6: Inspect the store; the predicted inputs should now be cached
+    # Step 7: Inspect the store; the predicted inputs should now be cached
     inspect_result = isaura_operations.inspect(model_id, ",".join(samples))
     assert inspect_result["status"] == "ok", f"Inspect failed: {inspect_result}"
     assert inspect_result["num_cached"] == n_samples, (
@@ -129,26 +131,74 @@ def test_model_complete_lifecycle(tmp_path):
         f"Expected no missing inputs, got {inspect_result}"
     )
 
-    # Step 7: Read the cached results back out of the store
+    # Step 8: Read the cached results back out of the store
     cache_output = tmp_path / "cached.csv"
     read_result = isaura_operations.read(
         model_id, ",".join(samples), output_path=str(cache_output)
     )
     assert read_result["status"] == "ok", f"Read failed: {read_result}"
+
+    # The non-verbose payload carries counts and where the results landed,
+    # but not the input lists themselves.
+    assert set(read_result) == {
+        "status",
+        "num_requested",
+        "num_cached",
+        "num_missing",
+        "output_path",
+        "columns",
+    }, f"Unexpected read payload keys: {sorted(read_result)}"
+    assert read_result["num_requested"] == n_samples, (
+        f"Expected {n_samples} requested, got {read_result}"
+    )
     assert read_result["num_cached"] == n_samples, (
         f"Expected {n_samples} cached results, got {read_result}"
     )
-    assert cache_output.exists(), "Read did not write the cached results file"
-    cache_rows = cache_output.read_text().splitlines()
-    assert len(cache_rows) == n_samples + 1, (
-        f"Expected header + {n_samples} rows, got {len(cache_rows)}: {cache_rows}"
+    assert read_result["num_missing"] == 0, (
+        f"Everything was just written, so nothing should be missing: {read_result}"
+    )
+    assert read_result["output_path"] == str(cache_output), (
+        f"Read wrote to unexpected path: {read_result}"
     )
 
-    # Step 8: Close the model service
+    # The reported columns should describe the CSV that was actually written,
+    # and should carry the model's own output column through from predict.
+    assert cache_output.exists(), "Read did not write the cached results file"
+    with open(cache_output, newline="") as f:
+        cached_rows = list(csv.DictReader(f))
+    assert read_result["columns"] == list(cached_rows[0]), (
+        f"Reported columns {read_result['columns']} do not match the written "
+        f"CSV header {list(cached_rows[0])}"
+    )
+    predicted_columns = predict_result["columns"]
+    assert read_result["columns"] == predicted_columns, (
+        f"Cached columns {read_result['columns']} differ from the predicted "
+        f"columns {predicted_columns}"
+    )
+
+    # Every requested input should come back, exactly once each.
+    key_column = next(c for c in ("input", "smiles") if c in cached_rows[0])
+    assert len(cached_rows) == n_samples, (
+        f"Expected {n_samples} cached rows, got {cached_rows}"
+    )
+    assert {row[key_column] for row in cached_rows} == set(samples), (
+        f"Cached inputs do not round-trip the requested ones: {cached_rows}"
+    )
+
+    # Step 9: The same read, verbose, additionally reports what was missing
+    verbose_result = isaura_operations.read(
+        model_id, ",".join(samples), output_path=str(cache_output), verbose=True
+    )
+    assert verbose_result["status"] == "ok", f"Verbose read failed: {verbose_result}"
+    assert verbose_result["missing"] == [], (
+        f"Expected no missing inputs, got {verbose_result}"
+    )
+
+    # Step 10: Close the model service
     close_result = close_model_helper(model_id)
     assert close_result is True
 
-    # Step 9: Delete the model
+    # Step 11: Delete the model
     delete_result = delete_model_helper(model_id)
     assert delete_result is True
     check_result = check_model_fetched_helper(model_id)

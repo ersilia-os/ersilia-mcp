@@ -1,4 +1,4 @@
-"""The ``get_precalculations`` tool for retrieving results from Isaura."""
+"""The ``read_precalculations_from_isaura`` tool for retrieving Isaura results."""
 
 import asyncio
 
@@ -11,19 +11,20 @@ def register(mcp: FastMCP) -> None:
     """Register the Isaura read tool on the MCP server."""
 
     @mcp.tool(timeout=300.0)
-    async def get_precalculations(
+    async def read_precalculations_from_isaura(
         model: str,
         input_data: str,
         version: str = "v1",
         bucket: str = "isaura-public",
         output_path: str | None = None,
+        verbose: bool = False,
     ) -> dict:
         """Check which inputs are cached in Isaura and retrieve those results.
 
         Looks up inputs in an Isaura store instead of recomputing them, which
         is much faster when results are already cached. Inputs are first
         inspected for availability; only the cached subset is retrieved, and
-        any missing inputs are reported rather than failing the whole read.
+        any missing inputs are counted rather than failing the whole read.
 
         Parameters
         ----------
@@ -39,6 +40,9 @@ def register(mcp: FastMCP) -> None:
         output_path : str, optional
             Where to write the retrieved results CSV. Only written when at
             least one input is cached; if omitted, a temporary file is created.
+        verbose : bool, optional
+            When ``True``, also return the full list of inputs that were
+            missing from the cache. By default only the counts are returned.
 
         Returns
         -------
@@ -47,10 +51,11 @@ def register(mcp: FastMCP) -> None:
                 - num_requested: The number of inputs looked up
                 - num_cached: How many were already cached
                 - num_missing: How many were not cached
-                - missing: Up to 20 of the inputs that were not cached
                 - output_path: The CSV the cached results were written to
                   (``None`` when nothing was cached)
                 - columns: The result columns
+            When ``verbose`` is ``True``, also includes:
+                - missing: The inputs that were not cached
             On failure (e.g. the local store is unreachable), ``status`` is
             ``"error"`` with an ``error`` message.
         """
@@ -63,4 +68,5 @@ def register(mcp: FastMCP) -> None:
             version,
             bucket,
             output_path,
+            verbose,
         )

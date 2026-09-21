@@ -45,6 +45,7 @@ def _isaura_cli() -> list:
 def test_model_complete_lifecycle(tmp_path):
     """Test the full lifecycle, incl. caching predictions in Isaura and reading them back."""
     model_id = "eos3b5e"
+    test_inputs = ["CCO", "CCC"]
 
     # Step 1: Fetch the model
     fetch_result = fetch_model_helper(model_id)
@@ -94,8 +95,8 @@ def test_model_complete_lifecycle(tmp_path):
     # The written CSV should have a header plus one row per input
     assert output_path.exists(), "Predict did not write the output file"
     rows = output_path.read_text().splitlines()
-    assert len(rows) == n_samples + 1, (
-        f"Expected header + {n_samples} rows, got {len(rows)}: {rows}"
+    assert len(rows) == len(test_inputs) + 1, (
+        f"Expected header + {len(test_inputs)} rows, got {len(rows)}: {rows}"
     )
 
     # Step 5: Cache the predictions in the Isaura store via the CLI
@@ -129,11 +130,26 @@ def test_model_complete_lifecycle(tmp_path):
         f"Expected no missing inputs, got {inspect_result}"
     )
 
-    # Step 7: Close the model service
+    # Step 7: Read the cached results back out of the store
+    cache_output = tmp_path / "cached.csv"
+    read_result = isaura_operations.read(
+        model_id, ",".join(test_inputs), output_path=str(cache_output)
+    )
+    assert read_result["status"] == "ok", f"Read failed: {read_result}"
+    assert read_result["num_cached"] == len(test_inputs), (
+        f"Expected {len(test_inputs)} cached results, got {read_result}"
+    )
+    assert cache_output.exists(), "Read did not write the cached results file"
+    cache_rows = cache_output.read_text().splitlines()
+    assert len(cache_rows) == n_samples + 1, (
+        f"Expected header + {n_samples} rows, got {len(cache_rows)}: {cache_rows}"
+    )
+
+    # Step 8: Close the model service
     close_result = close_model_helper(model_id)
     assert close_result is True
 
-    # Step 8: Delete the model
+    # Step 9: Delete the model
     delete_result = delete_model_helper(model_id)
     assert delete_result is True
     check_result = check_model_fetched_helper(model_id)

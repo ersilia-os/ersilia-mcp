@@ -20,7 +20,8 @@ def register(mcp: FastMCP) -> None:
     ) -> dict:
         """Check which inputs are already cached in Isaura without retrieving them.
 
-        This is the inspection-only counterpart to ``get_precalculations``: it
+        This is the inspection-only counterpart to
+        ``read_precalculations_from_isaura``: it
         reports how many of the requested inputs are available in the Isaura
         store, but does not fetch or write any results. Use it to gauge cache
         coverage before deciding whether to read or recompute.

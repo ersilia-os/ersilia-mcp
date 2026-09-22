@@ -37,6 +37,8 @@ Create a new virtual conda environment, activate it, and install the necessary p
 conda create -n ersilia-mcp python=3.12
 conda activate ersilia-mcp
 pip install poetry
+poetry config virtualenvs.create false --local
+poetry env use $(which python)
 poetry install
 ```
 

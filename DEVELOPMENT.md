@@ -3,6 +3,8 @@
 ```bash
 conda create -n ersilia-mcp python=3.12
 conda activate ersilia-mcp
+poetry config virtualenvs.create false --local
+poetry env use $(which python)
 # for local development
 poetry install --all-extras
 ```

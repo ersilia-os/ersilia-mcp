@@ -58,6 +58,15 @@ jobs:
         run: |
           pip install poetry
           poetry install --all-extras
+      - name: Pre-pull MinIO from Quay
+        # Isaura's compose file asks for minio/minio:latest, which is no
+        # longer publicly pullable from Docker Hub. Compose defaults to
+        # pull_policy "missing", so tagging the Quay image locally satisfies
+        # it without any registry call.
+        # Update this when isaura updates their image tag.
+        run: |
+          docker pull quay.io/minio/minio:latest
+          docker tag quay.io/minio/minio:latest minio/minio:latest
       - name: Start the Isaura store
         run: |
           poetry run isaura engine --start

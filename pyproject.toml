@@ -17,7 +17,7 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
   "fastmcp>=3.4.4",
   "rich>=15.0.0",
-  "ersilia>=0.1.59",
+  "ersilia>=0.1.62",
   "requests>=2.34.2",
   "isaura>=2.4.1",
 ]
@@ -25,7 +25,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=9.1.1",
-  "ruff>=0.16.0",
+  "ruff>=0.16.8",
 ]
 
 [project.scripts]

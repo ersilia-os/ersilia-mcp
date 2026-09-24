@@ -12,6 +12,7 @@ from ersilia_mcp.utils.isaura.isaura_operations import (
     _resolve_inputs,
     _write_input_csv,
     inspect,
+    read,
 )
 
 _OPS = "ersilia_mcp.utils.isaura.isaura_operations"
@@ -148,5 +149,95 @@ def test_inspect_no_valid_inputs():
 def test_inspect_error(mock_cached):
     """Test inspect returns an error status when inspection fails."""
     result = inspect("eos3b5e", "CCO")
+    assert result["status"] == "error"
+    assert "store unreachable" in result["error"]
+
+
+# --- read -------------------------------------------------------------------
+
+
+@patch(f"{_OPS}.IsauraReader")
+@patch(f"{_OPS}._inspect_cached")
+def test_read_all_cached_writes_results(mock_cached, mock_reader_class, tmp_path):
+    """Test read retrieves and writes results when every input is cached."""
+    mock_cached.return_value = ["CCO", "CCC"]
+    df = pd.DataFrame({"input": ["CCO", "CCC"], "value": [1.0, 2.0]})
+    mock_reader_class.return_value.__enter__.return_value.read.return_value = df
+
+    output_path = tmp_path / "out.csv"
+    result = read("eos3b5e", "CCO,CCC", output_path=str(output_path))
+
+    assert result["status"] == "ok"
+    assert result["num_cached"] == 2
+    assert result["num_missing"] == 0
+    assert result["output_path"] == str(output_path)
+    assert result["columns"] == ["input", "value"]
+    assert output_path.exists()
+
+
+@patch(f"{_OPS}.IsauraReader")
+@patch(f"{_OPS}._inspect_cached")
+def test_read_partial_cached_counts_missing(mock_cached, mock_reader_class, tmp_path):
+    """Test read retrieves only the cached subset and counts missing inputs."""
+    mock_cached.return_value = ["CCO"]
+    df = pd.DataFrame({"input": ["CCO"], "value": [1.0]})
+    mock_reader_class.return_value.__enter__.return_value.read.return_value = df
+
+    output_path = tmp_path / "out.csv"
+    result = read("eos3b5e", "CCO,CCC", output_path=str(output_path))
+
+    assert result["num_cached"] == 1
+    assert result["num_missing"] == 1
+    assert "missing" not in result
+    assert output_path.exists()
+
+
+@patch(f"{_OPS}.IsauraReader")
+@patch(f"{_OPS}._inspect_cached")
+def test_read_verbose_includes_missing(mock_cached, mock_reader_class, tmp_path):
+    """Test read lists the uncached inputs when verbose."""
+    mock_cached.return_value = ["CCO"]
+    df = pd.DataFrame({"input": ["CCO"], "value": [1.0]})
+    mock_reader_class.return_value.__enter__.return_value.read.return_value = df
+
+    output_path = tmp_path / "out.csv"
+    result = read("eos3b5e", "CCO,CCC", output_path=str(output_path), verbose=True)
+
+    assert result["num_missing"] == 1
+    assert result["missing"] == ["CCC"]
+
+
+@patch(f"{_OPS}.IsauraReader")
+@patch(f"{_OPS}._inspect_cached")
+def test_read_nothing_cached_skips_reader(mock_cached, mock_reader_class):
+    """Test read returns early without reading when nothing is cached."""
+    mock_cached.return_value = []
+    result = read("eos3b5e", "CCO,CCC")
+    assert result["num_cached"] == 0
+    assert result["output_path"] is None
+    assert result["columns"] == []
+    mock_reader_class.assert_not_called()
+
+
+@patch(f"{_OPS}.IsauraReader")
+@patch(f"{_OPS}._inspect_cached")
+def test_read_verbose_lists_missing_when_nothing_cached(mock_cached, mock_reader_class):
+    """Test the early return still lists every input when verbose."""
+    mock_cached.return_value = []
+    result = read("eos3b5e", "CCO,CCC", verbose=True)
+    assert result["missing"] == ["CCO", "CCC"]
+    mock_reader_class.assert_not_called()
+
+
+def test_read_no_valid_inputs():
+    """Test read returns an error status when there are no inputs."""
+    result = read("eos3b5e", "  ,  ")
+    assert result["status"] == "error"
+
+
+@patch(f"{_OPS}._inspect_cached", side_effect=Exception("store unreachable"))
+def test_read_error(mock_cached):
+    """Test read returns an error status when the store is unreachable."""
+    result = read("eos3b5e", "CCO")
     assert result["status"] == "error"
     assert "store unreachable" in result["error"]

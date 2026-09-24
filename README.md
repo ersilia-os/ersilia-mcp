@@ -4,21 +4,31 @@ A [Model Context Protocol](https://modelcontextprotocol.io) server built on the
 official FastMCP SDK. It lets MCP clients search the Ersilia Model Hub catalog
 and fetch, serve, and run its AI/ML models, all over stdio.
 
-| Primitive | Name                  | Description                                                  |
-| --------- | --------------------- | ----------------------------------------------------------- |
-| Tool      | `search_model`        | Searches the Ersilia model hub catalog by keyword.          |
-| Tool      | `fetch_model`         | Downloads a model to the local machine.                     |
-| Tool      | `check_model_fetched` | Reports whether a model has already been fetched.           |
-| Tool      | `serve_model`         | Starts a fetched model so it can accept predictions.        |
-| Tool      | `generate_inputs`     | Samples example inputs from a served model.                 |
-| Tool      | `predict`             | Runs predictions with a served model and writes a CSV.      |
-| Tool      | `close_model`         | Stops a served model and frees its resources.               |
-| Tool      | `delete_model`        | Deletes a fetched model from local storage.                 |
+| Primitive | Name                               | Description                                            |
+| --------- | ---------------------------------- | ------------------------------------------------------ |
+| Tool      | `search_model`                     | Searches the Ersilia model hub catalog by keyword.     |
+| Tool      | `fetch_model`                      | Downloads a model to the local machine.                |
+| Tool      | `check_model_fetched`              | Reports whether a model has already been fetched.      |
+| Tool      | `serve_model`                      | Starts a fetched model so it can accept predictions.   |
+| Tool      | `generate_inputs`                  | Samples example inputs from a served model.            |
+| Tool      | `predict`                          | Runs predictions with a served model and writes a CSV. |
+| Tool      | `close_model`                      | Stops a served model and frees its resources.          |
+| Tool      | `delete_model`                     | Deletes a fetched model from local storage.            |
+| Tool      | `inspect_isaura_cache`             | Reports how many inputs are already cached in Isaura.  |
+| Tool      | `read_precalculations_from_isaura` | Retrieves cached results instead of recomputing them.  |
 
 A typical workflow is `search_model` → `fetch_model` → `serve_model` → `predict`
 → `close_model`. You can optionally call `generate_inputs` after serving to
 sample example inputs to feed into `predict`, and `delete_model` to remove the
 model from local storage.
+
+The last two tools read from an [Isaura](https://github.com/ersilia-os/isaura)
+precalculation store, which holds results computed earlier. Call
+`inspect_isaura_cache` to see how much of your input is already covered, then
+`read_precalculations_from_isaura` to pull those results back without serving
+the model at all. Both accept `verbose` to list the individual inputs that are
+missing from the cache. A running store is required; see
+[DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Installation
 

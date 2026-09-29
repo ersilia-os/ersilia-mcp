@@ -7,7 +7,9 @@
     // Ersilia serves models as containers and Isaura runs MinIO via compose.
     // Docker-in-Docker (rather than docker-outside-of-docker) keeps Isaura's
     // ~/minio-data bind mount resolving inside the codespace.
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false
+    },
     "ghcr.io/devcontainers/features/node:1": {}, // required by Claude
     "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
   },

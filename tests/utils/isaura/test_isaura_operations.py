@@ -5,7 +5,9 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
+from isaura.manage import IsauraInspect
 
+from ersilia_mcp.utils.isaura import isaura_operations
 from ersilia_mcp.utils.isaura.isaura_operations import (
     _csv_inputs,
     _inspect_cached,
@@ -67,6 +69,66 @@ def test_resolve_inputs_csv_file_reuses_file_without_tempfile(tmp_path):
     assert source_csv == str(csv_file)
     assert temp_input_csv is None
     mock_write.assert_not_called()
+
+
+def test_resolve_inputs_smiles_csv_creates_backend_compatible_file(tmp_path):
+    """Keep the source CSV while passing an input column to Isaura."""
+    csv_file = tmp_path / "smiles.csv"
+    csv_file.write_text("smiles\nCCO\nCCC\n")
+
+    requested, source_csv, temp_input_csv = _resolve_inputs(str(csv_file))
+    try:
+        assert requested == ["CCO", "CCC"]
+        assert source_csv == temp_input_csv
+        assert source_csv != str(csv_file)
+        assert _csv_inputs(source_csv) == requested
+        with open(source_csv) as f:
+            assert f.readline().strip() == "input"
+        assert csv_file.read_text() == "smiles\nCCO\nCCC\n"
+    finally:
+        if temp_input_csv is not None:
+            os.remove(temp_input_csv)
+
+
+def test_inspect_smiles_csv_finds_cached_input_and_removes_tempfile(tmp_path):
+    """Exercise Isaura's real CSV parser without starting a store."""
+    csv_file = tmp_path / "smiles.csv"
+    csv_file.write_text("smiles\nCCO\n")
+    original_files = set(tmp_path.iterdir())
+
+    with (
+        patch.object(
+            IsauraInspect, "_indices_union", return_value=({}, {"CCO": "stored"})
+        ),
+        patch.object(isaura_operations.tempfile, "tempdir", str(tmp_path)),
+    ):
+        result = inspect("eos3b5e", str(csv_file), verbose=True)
+
+    assert result["status"] == "ok"
+    assert result["num_requested"] == 1
+    assert result["num_cached"] == 1
+    assert result["num_missing"] == 0
+    assert result["cached"] == ["CCO"]
+    assert result["missing"] == []
+    assert set(tmp_path.iterdir()) == original_files
+    assert csv_file.read_text() == "smiles\nCCO\n"
+
+
+def test_inspect_smiles_csv_removes_tempfile_after_backend_error(tmp_path):
+    """Cleanup must also run when the cache lookup fails."""
+    csv_file = tmp_path / "smiles.csv"
+    csv_file.write_text("smiles\nCCO\n")
+    original_files = set(tmp_path.iterdir())
+
+    with (
+        patch(f"{_OPS}._inspect_cached", side_effect=RuntimeError("store unavailable")),
+        patch.object(isaura_operations.tempfile, "tempdir", str(tmp_path)),
+    ):
+        result = inspect("eos3b5e", str(csv_file))
+
+    assert result["status"] == "error"
+    assert set(tmp_path.iterdir()) == original_files
+    assert csv_file.read_text() == "smiles\nCCO\n"
 
 
 def test_resolve_inputs_string_writes_tempfile():

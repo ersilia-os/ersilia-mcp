@@ -1,0 +1,39 @@
+{
+  "name": "ersilia-mcp",
+  // Conda is not optional: .mcp.json launches the server with
+  // `conda run -n ersilia-mcp`, so the env name must match exactly.
+  "image": "mcr.microsoft.com/devcontainers/miniconda:3",
+  "features": {
+    // Ersilia serves models as containers and Isaura runs MinIO via compose.
+    // Docker-in-Docker (rather than docker-outside-of-docker) keeps Isaura's
+    // ~/minio-data bind mount resolving inside the codespace.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+  },
+  "onCreateCommand": "bash .devcontainer/setup.sh",
+  "postAttachCommand": "bash .devcontainer/start-store.sh",
+  "forwardPorts": [9000, 9001],
+  "portsAttributes": {
+    "9000": {
+      "label": "MinIO API",
+      "onAutoForward": "silent"
+    },
+    "9001": {
+      "label": "MinIO console",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["charliermarsh.ruff", "ms-python.python"],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/envs/ersilia-mcp/bin/python",
+        "python.testing.pytestEnabled": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}

@@ -9,7 +9,7 @@ from isaura.manage import IsauraInspect
 
 from ersilia_mcp.utils.logging import logger
 
-# Columns Isaura accepts as the molecule/lookup key, in priority order.
+# Columns accepted from tool input, in priority order. Isaura expects "input".
 _INPUT_COLUMNS = ("input", "smiles")
 
 
@@ -28,7 +28,7 @@ def _write_input_csv(inputs: list) -> str:
         Path to the temporary CSV file.
     """
     fd, path = tempfile.mkstemp(prefix="isaura_inputs_", suffix=".csv")
-    with os.fdopen(fd, "w", newline="") as f:
+    with os.fdopen(fd, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["input"])
         writer.writerows([[value] for value in inputs])
@@ -54,7 +54,13 @@ def _csv_inputs(csv_path: str) -> list:
     ValueError
         If the CSV has neither an ``input`` nor a ``smiles`` column.
     """
-    with open(csv_path, newline="") as f:
+    inputs, _ = _read_csv_inputs(csv_path)
+    return inputs
+
+
+def _read_csv_inputs(csv_path: str) -> tuple[list, str]:
+    """Read input values and the column used from a CSV."""
+    with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         column = next(
             (c for c in _INPUT_COLUMNS if c in (reader.fieldnames or [])), None
@@ -64,9 +70,10 @@ def _csv_inputs(csv_path: str) -> list:
                 f"CSV must have an 'input' or 'smiles' column; "
                 f"found {reader.fieldnames}"
             )
-        return [
+        inputs = [
             row[column].strip() for row in reader if (row.get(column) or "").strip()
         ]
+        return inputs, column
 
 
 def _resolve_inputs(input_data: str) -> tuple:
@@ -88,7 +95,11 @@ def _resolve_inputs(input_data: str) -> tuple:
         the caller must delete (``None`` when a user-supplied CSV was reused).
     """
     if os.path.isfile(input_data):
-        return _csv_inputs(input_data), input_data, None
+        requested, column = _read_csv_inputs(input_data)
+        if column == "input" or not requested:
+            return requested, input_data, None
+        temp_input_csv = _write_input_csv(requested)
+        return requested, temp_input_csv, temp_input_csv
     requested = [s.strip() for s in input_data.split(",") if s.strip()]
     if not requested:
         return [], None, None

@@ -6,7 +6,7 @@ set -euo pipefail
 ENV_NAME="ersilia-mcp"
 PYTHON_VERSION="3.12"
 
-conda init --bash
+conda init --all
 
 # The env name is load-bearing: .mcp.json starts the server with
 # `conda run -n ersilia-mcp ersilia-mcp`.

@@ -19,7 +19,9 @@ dependencies = [
   "rich>=15.0.0",
   "ersilia>=0.1.59",
   "requests>=2.34.2",
-  "isaura>=2.4.1",
+  # Sourced from git; see [tool.poetry.dependencies] below. Poetry only
+  # enriches a PEP 621 entry that carries no version constraint.
+  "isaura",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +35,9 @@ ersilia-mcp = "ersilia_mcp.server:main"
 
 [tool.poetry]
 packages = [{ include = "ersilia_mcp", from = "src" }]
+
+[tool.poetry.dependencies]
+isaura = { git = "https://github.com/ersilia-os/isaura.git", branch = "fix/build-minio-from-source" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

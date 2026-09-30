@@ -6,9 +6,6 @@ set -uo pipefail
 
 ENV_NAME="ersilia-mcp"
 
-conda init
-conda activate ersilia-mcp
-
 if curl -sf --max-time 5 http://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; then
   echo "Isaura store already running."
   exit 0

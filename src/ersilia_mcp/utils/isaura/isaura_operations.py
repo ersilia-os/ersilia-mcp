@@ -5,7 +5,7 @@ import os
 import tempfile
 import traceback
 
-from isaura.manage import IsauraInspect
+from isaura.manage import IsauraInspect, IsauraReader
 
 from ersilia_mcp.utils.logging import logger
 
@@ -127,6 +127,130 @@ def _inspect_cached(model_id: str, version: str, bucket: str, input_csv: str) ->
     if column is None:
         return []
     return [str(v) for v in available[column]]
+
+
+def read(
+    model_id: str,
+    input_data: str,
+    version: str = "v1",
+    bucket: str = "isaura-public",
+    output_path: str | None = None,
+    verbose: bool = False,
+) -> dict:
+    """
+    Check which inputs are cached in Isaura and retrieve those results.
+
+    Inputs are first inspected for availability; only the cached subset is
+    retrieved. Missing inputs are counted rather than causing the read to fail.
+
+    Parameters
+    ----------
+    model_id : str
+        Model identifier (e.g., ``eos3b5e``).
+    input_data : str
+        Either a path to a CSV with an ``input``/``smiles`` column (passed
+        straight to Isaura), or a comma-separated string of inputs.
+    version : str, optional
+        Model version to read, by default ``"v1"``.
+    bucket : str, optional
+        Project bucket to read from, by default ``"isaura-public"``.
+    output_path : str, optional
+        Where to write the retrieved results CSV. Only written when at least
+        one input is cached; if omitted, a temporary file is created.
+    verbose : bool, optional
+        When ``True``, also return the full list of inputs that were not
+        cached. By default only the counts are returned.
+
+    Returns
+    -------
+    dict
+        On success::
+
+            {
+                "status": "ok",
+                "num_requested": int,
+                "num_cached": int,
+                "num_missing": int,
+                "output_path": str | None,  # None when nothing was cached
+                "columns": list,
+                # only present when verbose=True:
+                "missing": list,  # every input not cached
+            }
+
+        On failure (e.g. the local store is unreachable)::
+
+            {"status": "error", "error": str}
+    """
+    # Temp CSVs we create (and must clean up); a user-supplied CSV is left alone.
+    temp_input_csv = None
+    subset_csv = None
+    try:
+        requested, source_csv, temp_input_csv = _resolve_inputs(input_data)
+        if not requested:
+            logger.error("No valid inputs found to read")
+            return {"status": "error", "error": "No valid inputs provided"}
+
+        logger.info(
+            f"Inspecting {len(requested)} input(s) of model {model_id} "
+            f"({version}) in bucket {bucket}"
+        )
+        cached = _inspect_cached(model_id, version, bucket, source_csv)
+        cached_set = set(cached)
+        missing = [value for value in requested if value not in cached_set]
+        logger.info(f"{len(cached)} cached, {len(missing)} missing")
+
+        result = {
+            "status": "ok",
+            "num_requested": len(requested),
+            "num_cached": len(cached),
+            "num_missing": len(missing),
+            "output_path": None,
+            "columns": [],
+        }
+        if verbose:
+            result["missing"] = missing
+        if not cached:
+            return result
+
+        # Write the cached inputs to a temp csv file.
+        # Since we pass approximate=False and since the mcp server runs on stdio,
+        # un-cached inputs will cause the read to error.
+        # When everything is cached in isaura, we can use ``source_csv`` directly.
+        if missing:
+            read_csv = subset_csv = _write_input_csv(cached)
+        else:
+            read_csv = source_csv
+        with IsauraReader(
+            model_id=model_id,
+            model_version=version,
+            input_csv=read_csv,
+            approximate=False,
+            bucket=bucket,
+        ) as reader:
+            # Call without ``output_csv``: that path returns an empty frame and
+            # writes to disk instead, so we take the frame and write it here.
+            df = reader.read()
+
+        if output_path is None:
+            fd, output_path = tempfile.mkstemp(prefix=f"{model_id}_", suffix=".csv")
+            os.close(fd)
+        df.to_csv(output_path, index=False)
+
+        logger.success(
+            f"Retrieved {len(df)} precalculated result(s) for {model_id}; "
+            f"wrote to {output_path}"
+        )
+        result["output_path"] = output_path
+        result["columns"] = list(df.columns)
+        return result
+    except (Exception, SystemExit) as e:  # noqa: BLE001
+        logger.error(f"Error reading precalculations for {model_id}: {e!s}")
+        logger.error(traceback.format_exc())
+        return {"status": "error", "error": str(e)}
+    finally:
+        for path in (temp_input_csv, subset_csv):
+            if path is not None and os.path.exists(path):
+                os.remove(path)
 
 
 def inspect(

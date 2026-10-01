@@ -77,8 +77,23 @@ ersilia-mcp
 
 TODO: Remove CLI commands as we add new mcp tools
 
-The `inspect_isaura_cache` tool checks to see which inputs are cached in the [Isaura](https://github.com/ersilia-os/isaura) store (a MinIO instance managed
-by Isaura over Docker). Docker must be running.
+Two tools read from the [Isaura](https://github.com/ersilia-os/isaura) store (a
+MinIO instance managed by Isaura over Docker). Docker must be running.
+
+| Tool                               | Purpose                                                         |
+| ---------------------------------- | --------------------------------------------------------------- |
+| `inspect_isaura_cache`             | Counts which inputs are cached, without retrieving anything.    |
+| `read_precalculations_from_isaura` | Retrieves the cached subset and writes it to a CSV.             |
+
+Both take `model`, `input_data` (a CSV path or a comma-separated string),
+`version`, and `bucket`, and both accept `verbose` to list the inputs that are
+missing from the cache instead of only counting them. `inspect_isaura_cache`
+additionally lists the cached inputs when verbose;
+`read_precalculations_from_isaura` also takes an `output_path` for the
+retrieved results, and reports `columns` plus the `output_path` it wrote.
+
+Uncached inputs are skipped rather than failing the read, so a partial hit
+returns the cached rows and a `num_missing` count.
 
 Start the local store — this creates the reserved `isaura-public` and
 `isaura-private` buckets:
@@ -128,7 +143,16 @@ These test the MCP tools and utilities with mocked Ersilia API calls. Safe to ru
 poetry run pytest -v -m integration
 ```
 
-These call the live Ersilia Model Hub APIs to validate the full model lifecycle (search, fetch, serve, generate_inputs, predict, close, delete) against real data. Note: fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
+These call the live Ersilia Model Hub APIs to validate the full model lifecycle (fetch, check, serve, generate_inputs, predict, cache, inspect, read, close, delete) against real data. Note: fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
+
+The cache/inspect/read steps need a running Isaura store, so start it first (see [Isaura precalculation store](#isaura-precalculation-store)):
+```bash
+isaura engine --start
+poetry run pytest -v -m integration
+isaura engine --stop
+```
+
+The lifecycle test writes its predictions into the `isaura-public` bucket, so the store accumulates rows across runs.
 
 ## CI/CD
 

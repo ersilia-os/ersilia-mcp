@@ -24,7 +24,7 @@ def register(mcp: FastMCP) -> None:
         model : str
             Model identifier (e.g., ``eos3b5e``).
         input_csv : str
-            Path to a results CSV with an ``input``/``smiles`` column plus
+            Path to a results CSV with an ``input`` column plus
             output columns, e.g. what ``predict`` writes.
         version : str, optional
             Model version to write under, by default ``"v1"``.

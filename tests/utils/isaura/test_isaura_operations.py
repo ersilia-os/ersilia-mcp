@@ -102,7 +102,7 @@ def test_inspect_cached_returns_available_column(mock_inspect_class):
 
 @patch(f"{_OPS}.IsauraInspect")
 def test_inspect_cached_returns_empty_when_no_key_column(mock_inspect_class):
-    """Test _inspect_cached returns [] when the frame has no input/smiles column."""
+    """Test _inspect_cached returns [] when the frame has no input column."""
     mock_inspect_class.return_value.inspect_inputs.return_value = pd.DataFrame(
         {"other": [1, 2]}
     )
@@ -282,15 +282,6 @@ def test_write_preserves_payload_columns(mock_writer_class, tmp_path):
 
 
 @patch(f"{_OPS}.IsauraWriter")
-def test_write_accepts_smiles_column(mock_writer_class, tmp_path):
-    """Test write works with a 'smiles' lookup column as well as 'input'."""
-    results_csv = tmp_path / "out.csv"
-    results_csv.write_text("smiles,value\nCCO,1.0\n")
-
-    assert write("eos3b5e", str(results_csv))["status"] == "ok"
-
-
-@patch(f"{_OPS}.IsauraWriter")
 def test_write_missing_file_skips_writer(mock_writer_class, tmp_path):
     """Test write errors without calling Isaura when the CSV is absent."""
     result = write("eos3b5e", str(tmp_path / "nope.csv"))
@@ -301,7 +292,7 @@ def test_write_missing_file_skips_writer(mock_writer_class, tmp_path):
 
 @patch(f"{_OPS}.IsauraWriter")
 def test_write_rejects_csv_without_key_column(mock_writer_class, tmp_path):
-    """Test write errors when the CSV has no input/smiles column."""
+    """Test write errors when the CSV has no input column."""
     results_csv = tmp_path / "out.csv"
     results_csv.write_text("mol,value\nCCO,1.0\n")
 

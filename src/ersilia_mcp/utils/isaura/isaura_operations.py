@@ -10,7 +10,7 @@ from isaura.manage import IsauraInspect, IsauraReader, IsauraWriter
 from ersilia_mcp.utils.logging import logger
 
 # Columns Isaura accepts as the molecule/lookup key, in priority order.
-_INPUT_COLUMNS = ("input", "smiles")
+_INPUT_COLUMNS = ("input")
 
 
 def _write_input_csv(inputs: list) -> str:
@@ -37,12 +37,12 @@ def _write_input_csv(inputs: list) -> str:
 
 def _csv_inputs(csv_path: str) -> list:
     """
-    Read the ``input``/``smiles`` column values from a CSV.
+    Read the ``input`` column values from a CSV.
 
     Parameters
     ----------
     csv_path : str
-        Path to a CSV with an ``input`` or ``smiles`` column.
+        Path to a CSV with an ``input`` column.
 
     Returns
     -------
@@ -52,7 +52,7 @@ def _csv_inputs(csv_path: str) -> list:
     Raises
     ------
     ValueError
-        If the CSV has neither an ``input`` nor a ``smiles`` column.
+        If the CSV does not have an ``input``.
     """
     with open(csv_path, newline="") as f:
         reader = csv.DictReader(f)
@@ -61,7 +61,7 @@ def _csv_inputs(csv_path: str) -> list:
         )
         if column is None:
             raise ValueError(
-                f"CSV must have an 'input' or 'smiles' column; "
+                f"CSV must have an 'input' column; "
                 f"found {reader.fieldnames}"
             )
         return [
@@ -76,7 +76,7 @@ def _resolve_inputs(input_data: str) -> tuple:
     Parameters
     ----------
     input_data : str
-        Either a path to a CSV with an ``input``/``smiles`` column, or a
+        Either a path to a CSV with an ``input`` column, or a
         comma-separated string of inputs.
 
     Returns
@@ -148,7 +148,7 @@ def read(
     model_id : str
         Model identifier (e.g., ``eos3b5e``).
     input_data : str
-        Either a path to a CSV with an ``input``/``smiles`` column (passed
+        Either a path to a CSV with an ``input`` column (passed
         straight to Isaura), or a comma-separated string of inputs.
     version : str, optional
         Model version to read, by default ``"v1"``.
@@ -263,7 +263,7 @@ def write(
     Store a model's results in Isaura so they can be read back later.
 
     Unlike :func:`read` and :func:`inspect`, this takes a results CSV rather
-    than a list of inputs: Isaura keys each row on its ``input``/``smiles``
+    than a list of inputs: Isaura keys each row on its ``input``
     value and stores the remaining columns as the payload.
 
     Parameters
@@ -271,7 +271,7 @@ def write(
     model_id : str
         Model identifier (e.g., ``eos3b5e``).
     input_csv : str
-        Path to a results CSV with an ``input``/``smiles`` column plus the
+        Path to a results CSV with an ``input`` column plus the
         model's output columns — e.g. the file written by the ``predict`` tool.
         If the file name contains a model identifier that disagrees with
         ``model_id``, Isaura refuses the write.
@@ -305,7 +305,7 @@ def write(
 
         with open(input_csv, newline="") as f:
             columns = csv.DictReader(f).fieldnames or []
-        # Raises when neither an 'input' nor a 'smiles' column is present.
+        # Raises when an 'input' column is not present.
         rows = _csv_inputs(input_csv)
         if not rows:
             logger.error(f"No inputs to write in {input_csv}")
@@ -352,7 +352,7 @@ def inspect(
     model_id : str
         Model identifier (e.g., ``eos3b5e``).
     input_data : str
-        Either a path to a CSV with an ``input``/``smiles`` column, or a
+        Either a path to a CSV with an ``input`` column, or a
         comma-separated string of inputs.
     version : str, optional
         Model version to inspect, by default ``"v1"``.

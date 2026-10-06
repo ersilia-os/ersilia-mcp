@@ -11,9 +11,6 @@ Skip with: pytest -m "not integration"
 """
 
 import csv
-import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 
@@ -27,20 +24,6 @@ from ersilia_mcp.utils.model_operations import (
     serve_model_helper,
 )
 from ersilia_mcp.utils.predict import predict_helper
-
-
-def _isaura_cli() -> list:
-    """Build the command prefix that runs the ``isaura`` console script.
-
-    The CLI is installed alongside ``python`` in the active env, which isn't
-    guaranteed to be on ``PATH`` when pytest is launched directly. The script
-    is run *through* that interpreter rather than executed directly: a console
-    script whose shebang was never rewritten from ``#!python`` cannot be
-    exec'd, and ``subprocess`` reports the script itself as missing even
-    though it exists.
-    """
-    candidate = Path(sys.executable).parent / "isaura"
-    return [sys.executable, str(candidate)] if candidate.exists() else ["isaura"]
 
 
 @pytest.mark.integration
@@ -100,26 +83,20 @@ def test_model_complete_lifecycle(tmp_path):
         f"Expected header + {n_samples} rows, got {len(rows)}: {rows}"
     )
 
-    # Step 6: Cache the predictions in the Isaura store via the CLI
-    # TODO: Update this to use a isaura_write tool once we add that tool
-    write = subprocess.run(
-        [
-            *_isaura_cli(),
-            "write",
-            "-i",
-            str(output_path),
-            "-pn",
-            "isaura-public",
-            "-m",
-            model_id,
-            "-v",
-            "v1",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
+    # Step 6: Cache the predictions in the Isaura store
+    write_result = isaura_operations.write(model_id, str(output_path))
+    assert write_result["status"] == "ok", f"Write failed: {write_result}"
+    assert set(write_result) == {"status", "num_rows", "columns"}, (
+        f"Unexpected write payload keys: {sorted(write_result)}"
     )
-    assert write.returncode == 0, f"isaura write failed: {write.stderr}"
+    assert write_result["num_rows"] == n_samples, (
+        f"Expected {n_samples} rows written, got {write_result}"
+    )
+    # The whole prediction row is stored, not just the lookup key.
+    assert write_result["columns"] == predict_result["columns"], (
+        f"Written columns {write_result['columns']} differ from the predicted "
+        f"columns {predict_result['columns']}"
+    )
 
     # Step 7: Inspect the store; the predicted inputs should now be cached
     inspect_result = isaura_operations.inspect(model_id, ",".join(samples))

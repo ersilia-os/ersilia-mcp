@@ -16,18 +16,17 @@ def register(mcp: FastMCP) -> None:
     ) -> dict:
         """Run predictions against a served model from the Ersilia model hub.
 
-        The model must already be served (see the ``serve_model`` tool).
+        The model must already be served (see ``serve_model``).
 
         Parameters
         ----------
         model : str
             Model identifier (e.g., ``eos3b5e``).
         input_data : str
-            Either a path to a file (one input per line) or a string of one or
-            more inputs separated by newlines or commas.
+            A filepath (one input per line), or inputs separated by commas or
+            newlines.
         output_path : str, optional
-            Where to write the results CSV. If omitted, a temporary file is
-            created.
+            Where to write the results CSV. A temp file is used if omitted.
 
         Returns
         -------

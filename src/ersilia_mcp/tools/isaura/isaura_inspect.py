@@ -18,29 +18,21 @@ def register(mcp: FastMCP) -> None:
         bucket: str = "isaura-public",
         verbose: bool = False,
     ) -> dict:
-        """Check which inputs are already cached in Isaura without retrieving them.
-
-        This is the inspection-only counterpart to
-        ``read_precalculations_from_isaura``: it
-        reports how many of the requested inputs are available in the Isaura
-        store, but does not fetch or write any results. Use it to gauge cache
-        coverage before deciding whether to read or recompute.
+        """Check which inputs Isaura has cached, without retrieving them.
 
         Parameters
         ----------
         model : str
             Model identifier (e.g., ``eos3b5e``).
         input_data : str
-            Either a path to a CSV with an ``input``/``smiles`` column, or a
-            string of one or more inputs separated by commas.
+            A CSV path (``input``/``smiles`` column), or inputs separated by
+            commas.
         version : str, optional
-            Model version to inspect, by default ``"v1"``.
+            Model version, by default ``"v1"``.
         bucket : str, optional
-            Project bucket to inspect, by default ``"isaura-public"``.
+            Project bucket, by default ``"isaura-public"``.
         verbose : bool, optional
-            When ``True``, also return the full lists of which inputs are
-            cached and which are missing. By default only the counts are
-            returned.
+            When true, return the full list of cached and missing inputs (not just counts).
 
         Returns
         -------

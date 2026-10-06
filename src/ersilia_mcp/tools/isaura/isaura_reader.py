@@ -19,43 +19,40 @@ def register(mcp: FastMCP) -> None:
         output_path: str | None = None,
         verbose: bool = False,
     ) -> dict:
-        """Check which inputs are cached in Isaura and retrieve those results.
+        """Retrieve cached results from Isaura instead of recomputing.
 
-        Looks up inputs in an Isaura store instead of recomputing them, which
-        is much faster when results are already cached. Inputs are first
-        inspected for availability; only the cached subset is retrieved, and
-        any missing inputs are counted rather than failing the whole read.
+        Only the cached subset is returned; uncached inputs are counted rather
+        than failing the read.
 
         Parameters
         ----------
         model : str
             Model identifier (e.g., ``eos3b5e``).
         input_data : str
-            Either a path to a file (one input per line) or a string of one or
-            more inputs separated by newlines or commas.
+            A CSV path (``input``/``smiles`` column), or inputs separated by
+            commas or newlines.
         version : str, optional
-            Model version to read, by default ``"v1"``.
+            Model version, by default ``"v1"``.
         bucket : str, optional
-            Project bucket to read from, by default ``"isaura-public"``.
+            Project bucket, by default ``"isaura-public"``.
         output_path : str, optional
-            Where to write the retrieved results CSV. Only written when at
-            least one input is cached; if omitted, a temporary file is created.
+            Where to write the cached values (CSV filepath); a temporary file is used if omitted.
         verbose : bool, optional
-            When ``True``, also return the full list of inputs that were
-            missing from the cache. By default only the counts are returned.
+            Also return the list of uncached inputs.
 
         Returns
         -------
         dict
             On success, ``status`` is ``"ok"`` with:
-                - num_requested: The number of inputs looked up
+                - num_requested: Total number of inputs
                 - num_cached: How many were already cached
                 - num_missing: How many were not cached
-                - output_path: The CSV the cached results were written to
-                  (``None`` when nothing was cached)
+                - output_path: Where the cached results were written to (CSV filepath)
+                  (``None`` when none of the inputs were cached in isaura)
                 - columns: The result columns
             When ``verbose`` is ``True``, also includes:
-                - missing: The inputs that were not cached
+                - cached: every cached input
+                - missing: inputs not in the cache
             On failure (e.g. the local store is unreachable), ``status`` is
             ``"error"`` with an ``error`` message.
         """

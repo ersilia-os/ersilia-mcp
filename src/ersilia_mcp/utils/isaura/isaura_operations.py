@@ -5,7 +5,7 @@ import os
 import tempfile
 import traceback
 
-from isaura.manage import IsauraInspect, IsauraReader
+from isaura.manage import IsauraInspect, IsauraReader, IsauraWriter
 
 from ersilia_mcp.utils.logging import logger
 
@@ -251,6 +251,90 @@ def read(
         for path in (temp_input_csv, subset_csv):
             if path is not None and os.path.exists(path):
                 os.remove(path)
+
+
+def write(
+    model_id: str,
+    input_csv: str,
+    version: str = "v1",
+    bucket: str = "isaura-public",
+) -> dict:
+    """
+    Store a model's results in Isaura so they can be read back later.
+
+    Unlike :func:`read` and :func:`inspect`, this takes a results CSV rather
+    than a list of inputs: Isaura keys each row on its ``input``/``smiles``
+    value and stores the remaining columns as the payload.
+
+    Parameters
+    ----------
+    model_id : str
+        Model identifier (e.g., ``eos3b5e``).
+    input_csv : str
+        Path to a results CSV with an ``input``/``smiles`` column plus the
+        model's output columns — e.g. the file written by the ``predict`` tool.
+        If the file name contains a model identifier that disagrees with
+        ``model_id``, Isaura refuses the write.
+    version : str, optional
+        Model version to write under, by default ``"v1"``.
+    bucket : str, optional
+        Project bucket to write to, by default ``"isaura-public"``.
+
+    Returns
+    -------
+    dict
+        On success::
+
+            {
+                "status": "ok",
+                "num_rows": int,   # rows submitted, before deduplication
+                "columns": list,   # the CSV's columns
+            }
+
+        Isaura skips rows whose input is already stored, so ``num_rows``
+        counts what was submitted rather than what was newly added.
+
+        On failure (e.g. the local store is unreachable)::
+
+            {"status": "error", "error": str}
+    """
+    try:
+        if not os.path.isfile(input_csv):
+            logger.error(f"No such results CSV: {input_csv}")
+            return {"status": "error", "error": f"No such file: {input_csv}"}
+
+        with open(input_csv, newline="") as f:
+            columns = csv.DictReader(f).fieldnames or []
+        # Raises when neither an 'input' nor a 'smiles' column is present.
+        rows = _csv_inputs(input_csv)
+        if not rows:
+            logger.error(f"No inputs to write in {input_csv}")
+            return {"status": "error", "error": "No valid inputs provided"}
+
+        logger.info(
+            f"Writing {len(rows)} row(s) of model {model_id} "
+            f"({version}) to bucket {bucket}"
+        )
+        with IsauraWriter(
+            input_csv=input_csv,
+            model_id=model_id,
+            model_version=version,
+            bucket=bucket,
+        ) as writer:
+            writer.write()
+
+        logger.success(
+            f"Wrote {len(rows)} row(s) for {model_id} ({version}) to {bucket}"
+        )
+        return {
+            "status": "ok",
+            "num_rows": len(rows),
+            "columns": list(columns),
+        }
+    except (Exception, SystemExit) as e:  # noqa: BLE001
+        logger.error(f"Error writing precalculations for {model_id}: {e!s}")
+        logger.error(traceback.format_exc())
+        return {"status": "error", "error": str(e)}
 
 
 def inspect(

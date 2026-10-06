@@ -41,18 +41,22 @@ def test_csv_inputs_reads_input_column(tmp_path):
     assert _csv_inputs(str(csv_file)) == ["CCO", "CCC"]
 
 
-def test_csv_inputs_falls_back_to_smiles_column(tmp_path):
-    """Test _csv_inputs uses the 'smiles' column when 'input' is absent."""
+def test_csv_inputs_rejects_smiles_column_with_hint(tmp_path):
+    """Test a 'smiles' header is rejected, and the error says to rename it."""
     csv_file = tmp_path / "in.csv"
-    csv_file.write_text("smiles\nCCO\nCCC\n")
-    assert _csv_inputs(str(csv_file)) == ["CCO", "CCC"]
+    csv_file.write_text("smiles,value\nCCO,1.0\n")
+
+    with pytest.raises(ValueError, match="smiles"):
+        _csv_inputs(str(csv_file))
+    # The CSV is the user's to fix; we never touch it.
+    assert csv_file.read_text() == "smiles,value\nCCO,1.0\n"
 
 
-def test_csv_inputs_raises_without_recognized_column(tmp_path):
-    """Test _csv_inputs raises when neither 'input' nor 'smiles' is present."""
+def test_csv_inputs_raises_without_input_column(tmp_path):
+    """Test _csv_inputs raises when there is no 'input' column at all."""
     csv_file = tmp_path / "in.csv"
     csv_file.write_text("mol\nCCO\n")
-    with pytest.raises(ValueError, match="input.*smiles"):
+    with pytest.raises(ValueError, match="must have an 'input' column"):
         _csv_inputs(str(csv_file))
 
 
@@ -279,6 +283,19 @@ def test_write_preserves_payload_columns(mock_writer_class, tmp_path):
 
     assert result["columns"] == ["key", "input", "mol_weight"]
     assert result["num_rows"] == 1
+
+
+@patch(f"{_OPS}.IsauraWriter")
+def test_write_rejects_smiles_column_with_hint(mock_writer_class, tmp_path):
+    """Test a results CSV headed 'smiles' errors with a rename hint, unwritten."""
+    results_csv = tmp_path / "eos3b5e_output.csv"
+    results_csv.write_text("smiles,value\nCCO,1.0\n")
+
+    result = write("eos3b5e", str(results_csv))
+
+    assert result["status"] == "error"
+    assert "smiles" in result["error"]
+    mock_writer_class.assert_not_called()
 
 
 @patch(f"{_OPS}.IsauraWriter")

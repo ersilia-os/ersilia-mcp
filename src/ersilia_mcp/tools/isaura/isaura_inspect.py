@@ -31,8 +31,8 @@ def register(mcp: FastMCP) -> None:
         model : str
             Model identifier (e.g., ``eos3b5e``).
         input_data : str
-            Either a path to a CSV with an ``input``/``smiles`` column, or a
-            string of one or more inputs separated by commas.
+            Either a path to a CSV with an ``input`` column, or a string of one
+            or more inputs separated by commas.
         version : str, optional
             Model version to inspect, by default ``"v1"``.
         bucket : str, optional

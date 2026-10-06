@@ -9,8 +9,8 @@ from isaura.manage import IsauraInspect, IsauraReader, IsauraWriter
 
 from ersilia_mcp.utils.logging import logger
 
-# Columns Isaura accepts as the molecule/lookup key, in priority order.
-_INPUT_COLUMNS = ("input")
+# The only column Isaura accepts as the molecule/lookup key.
+_INPUT_COLUMN = "input"
 
 
 def _write_input_csv(inputs: list) -> str:
@@ -30,7 +30,7 @@ def _write_input_csv(inputs: list) -> str:
     fd, path = tempfile.mkstemp(prefix="isaura_inputs_", suffix=".csv")
     with os.fdopen(fd, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["input"])
+        writer.writerow([_INPUT_COLUMN])
         writer.writerows([[value] for value in inputs])
     return path
 
@@ -52,20 +52,20 @@ def _csv_inputs(csv_path: str) -> list:
     Raises
     ------
     ValueError
-        If the CSV does not have an ``input``.
+        If the CSV has no ``input`` column.
     """
     with open(csv_path, newline="") as f:
         reader = csv.DictReader(f)
-        column = next(
-            (c for c in _INPUT_COLUMNS if c in (reader.fieldnames or [])), None
-        )
-        if column is None:
+        if _INPUT_COLUMN not in (reader.fieldnames or []):
             raise ValueError(
-                f"CSV must have an 'input' column; "
-                f"found {reader.fieldnames}"
+                f"CSV must have an '{_INPUT_COLUMN}' column; "
+                f"found {reader.fieldnames}. The molecule column is often "
+                f"named 'smiles' instead — rename it to '{_INPUT_COLUMN}'."
             )
         return [
-            row[column].strip() for row in reader if (row.get(column) or "").strip()
+            row[_INPUT_COLUMN].strip()
+            for row in reader
+            if (row.get(_INPUT_COLUMN) or "").strip()
         ]
 
 
@@ -123,10 +123,9 @@ def _inspect_cached(model_id: str, version: str, bucket: str, input_csv: str) ->
         project_name=bucket,
     )
     available = inspector.inspect_inputs(input_csv=input_csv)
-    column = next((c for c in _INPUT_COLUMNS if c in available.columns), None)
-    if column is None:
+    if _INPUT_COLUMN not in available.columns:
         return []
-    return [str(v) for v in available[column]]
+    return [str(v) for v in available[_INPUT_COLUMN]]
 
 
 def read(

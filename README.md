@@ -16,19 +16,20 @@ and fetch, serve, and run its AI/ML models, all over stdio.
 | Tool      | `delete_model`                     | Deletes a fetched model from local storage.            |
 | Tool      | `inspect_isaura_cache`             | Reports how many inputs are already cached in Isaura.  |
 | Tool      | `read_precalculations_from_isaura` | Retrieves cached results instead of recomputing them.  |
+| Tool      | `write_precalculations_to_isaura`  | Stores results so they can be read back later.         |
 
 A typical workflow is `search_model` → `fetch_model` → `serve_model` → `predict`
 → `close_model`. You can optionally call `generate_inputs` after serving to
 sample example inputs to feed into `predict`, and `delete_model` to remove the
 model from local storage.
 
-The last two tools read from an [Isaura](https://github.com/ersilia-os/isaura)
+The last three tools use an [Isaura](https://github.com/ersilia-os/isaura)
 precalculation store, which holds results computed earlier. Call
 `inspect_isaura_cache` to see how much of your input is already covered, then
 `read_precalculations_from_isaura` to pull those results back without serving
-the model at all. Both accept `verbose` to list the individual inputs that are
-missing from the cache. A running store is required; see
-[DEVELOPMENT.md](DEVELOPMENT.md).
+the model at all. Feed a `predict` output CSV to
+`write_precalculations_to_isaura` to cache results for next time. A running
+store is required; see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Installation
 

@@ -13,6 +13,7 @@ from ersilia_mcp.utils.isaura.isaura_operations import (
     _write_input_csv,
     inspect,
     read,
+    write,
 )
 
 _OPS = "ersilia_mcp.utils.isaura.isaura_operations"
@@ -239,5 +240,93 @@ def test_read_no_valid_inputs():
 def test_read_error(mock_cached):
     """Test read returns an error status when the store is unreachable."""
     result = read("eos3b5e", "CCO")
+    assert result["status"] == "error"
+    assert "store unreachable" in result["error"]
+
+
+# --- write ------------------------------------------------------------------
+
+
+@patch(f"{_OPS}.IsauraWriter")
+def test_write_stores_results_csv(mock_writer_class, tmp_path):
+    """Test write hands the results CSV to Isaura and reports what it sent."""
+    results_csv = tmp_path / "eos3b5e_output.csv"
+    results_csv.write_text("input,value\nCCO,1.0\nCCC,2.0\n")
+
+    result = write("eos3b5e", str(results_csv), version="v2", bucket="isaura-private")
+
+    assert result == {
+        "status": "ok",
+        "num_rows": 2,
+        "columns": ["input", "value"],
+    }
+    mock_writer_class.assert_called_once_with(
+        input_csv=str(results_csv),
+        model_id="eos3b5e",
+        model_version="v2",
+        bucket="isaura-private",
+    )
+    mock_writer_class.return_value.__enter__.return_value.write.assert_called_once_with()
+
+
+@patch(f"{_OPS}.IsauraWriter")
+def test_write_preserves_payload_columns(mock_writer_class, tmp_path):
+    """Test write reports every column, not just the lookup key."""
+    results_csv = tmp_path / "out.csv"
+    results_csv.write_text("key,input,mol_weight\nabc,CCO,46.07\n")
+
+    result = write("eos3b5e", str(results_csv))
+
+    assert result["columns"] == ["key", "input", "mol_weight"]
+    assert result["num_rows"] == 1
+
+
+@patch(f"{_OPS}.IsauraWriter")
+def test_write_accepts_smiles_column(mock_writer_class, tmp_path):
+    """Test write works with a 'smiles' lookup column as well as 'input'."""
+    results_csv = tmp_path / "out.csv"
+    results_csv.write_text("smiles,value\nCCO,1.0\n")
+
+    assert write("eos3b5e", str(results_csv))["status"] == "ok"
+
+
+@patch(f"{_OPS}.IsauraWriter")
+def test_write_missing_file_skips_writer(mock_writer_class, tmp_path):
+    """Test write errors without calling Isaura when the CSV is absent."""
+    result = write("eos3b5e", str(tmp_path / "nope.csv"))
+    assert result["status"] == "error"
+    assert "No such file" in result["error"]
+    mock_writer_class.assert_not_called()
+
+
+@patch(f"{_OPS}.IsauraWriter")
+def test_write_rejects_csv_without_key_column(mock_writer_class, tmp_path):
+    """Test write errors when the CSV has no input/smiles column."""
+    results_csv = tmp_path / "out.csv"
+    results_csv.write_text("mol,value\nCCO,1.0\n")
+
+    result = write("eos3b5e", str(results_csv))
+    assert result["status"] == "error"
+    mock_writer_class.assert_not_called()
+
+
+@patch(f"{_OPS}.IsauraWriter")
+def test_write_rejects_header_only_csv(mock_writer_class, tmp_path):
+    """Test write errors when the CSV has a header but no rows."""
+    results_csv = tmp_path / "out.csv"
+    results_csv.write_text("input,value\n")
+
+    result = write("eos3b5e", str(results_csv))
+    assert result["status"] == "error"
+    mock_writer_class.assert_not_called()
+
+
+@patch(f"{_OPS}.IsauraWriter", side_effect=Exception("store unreachable"))
+def test_write_error(mock_writer_class, tmp_path):
+    """Test write returns an error status when the store is unreachable."""
+    results_csv = tmp_path / "out.csv"
+    results_csv.write_text("input,value\nCCO,1.0\n")
+
+    result = write("eos3b5e", str(results_csv))
     assert result["status"] == "error"
     assert "store unreachable" in result["error"]

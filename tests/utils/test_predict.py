@@ -50,6 +50,56 @@ def test_predict_helper_success(mock_model_class, tmp_path):
 
 
 @patch("ersilia_mcp.utils.predict.Model")
+def test_predict_helper_does_not_overwrite_input_file(mock_model_class, tmp_path):
+    """An output path that aliases the input must not destroy source data."""
+    input_file = tmp_path / "inputs.txt"
+    input_file.write_text("CCO\nCCC\n")
+
+    result = predict_helper("eos3b5e", str(input_file), str(input_file))
+
+    assert result == {}
+    assert input_file.read_text() == "CCO\nCCC\n"
+    mock_model_class.assert_not_called()
+
+
+@patch("ersilia_mcp.utils.predict.Model")
+def test_predict_helper_does_not_overwrite_hard_linked_input(
+    mock_model_class, tmp_path
+):
+    """Checking path strings alone would miss a hard-link alias."""
+    input_file = tmp_path / "inputs.txt"
+    input_file.write_text("CCO\n")
+    output_file = tmp_path / "results.csv"
+    os.link(input_file, output_file)
+
+    result = predict_helper("eos3b5e", str(input_file), str(output_file))
+
+    assert result == {}
+    assert input_file.read_text() == "CCO\n"
+    assert output_file.read_text() == "CCO\n"
+    mock_model_class.assert_not_called()
+
+
+@patch("ersilia_mcp.utils.predict.Model")
+def test_predict_helper_can_replace_distinct_output_file(mock_model_class, tmp_path):
+    """Existing output files remain writable when they are not the input."""
+    mock_instance = MagicMock()
+    mock_instance.run.return_value = pd.DataFrame({"input": ["CCO"]})
+    mock_model_class.return_value = mock_instance
+    input_file = tmp_path / "inputs.txt"
+    input_file.write_text("CCO\n")
+    output_file = tmp_path / "results.csv"
+    output_file.write_text("old output\n")
+
+    result = predict_helper("eos3b5e", str(input_file), str(output_file))
+
+    assert result["output_path"] == str(output_file)
+    assert input_file.read_text() == "CCO\n"
+    assert output_file.read_text() != "old output\n"
+    mock_instance.run.assert_called_once_with(["CCO"])
+
+
+@patch("ersilia_mcp.utils.predict.Model")
 def test_predict_helper_default_output_path(mock_model_class):
     """Test predict_helper creates a temp CSV when no output path is given."""
     mock_instance = MagicMock()

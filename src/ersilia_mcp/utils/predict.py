@@ -64,6 +64,17 @@ def predict_helper(
     """
     try:
         log_conda_environment()
+        if (
+            output_path is not None
+            and os.path.isfile(input_data)
+            and os.path.exists(output_path)
+            and os.path.samefile(input_data, output_path)
+        ):
+            logger.error(
+                "Output path refers to the input file; refusing to overwrite it"
+            )
+            return {}
+
         inputs = parse_input(input_data)
         if not inputs:
             logger.error("No valid inputs found to predict on")

@@ -17,7 +17,7 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
   "fastmcp>=3.4.4",
   "rich>=15.0.0",
-  "ersilia>=0.1.59",
+  "ersilia>=0.1.63",
   "requests>=2.34.2",
   # Sourced from git; see [tool.poetry.dependencies] below. Poetry only
   # enriches a PEP 621 entry that carries no version constraint.
@@ -27,7 +27,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=9.1.1",
-  "ruff>=0.16.0",
+  "ruff>=0.16.10",
 ]
 
 [project.scripts]

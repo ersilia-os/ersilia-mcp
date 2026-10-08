@@ -12,7 +12,7 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(timeout=10.0)
     async def close_model(model: str) -> bool:
-        """Close a served model. Terminates the model server and cleans up associated resources.
+        """Close a served model, freeing its resources.
 
         Parameters
         ----------

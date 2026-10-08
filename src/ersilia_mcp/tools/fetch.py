@@ -15,7 +15,7 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(timeout=900.0)
     async def fetch_model(model: str) -> bool:
-        """Fetch a model from the Ersilia model hub.
+        """Fetch a model from the Ersilia model hub. This can take a few minutes.
 
         Parameters
         ----------

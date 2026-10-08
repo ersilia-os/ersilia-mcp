@@ -16,8 +16,7 @@ def register(mcp: FastMCP) -> None:
     ) -> list[str]:
         """Generate example inputs for a served model from the Ersilia model hub.
 
-        The model must already be served (see the ``serve_model`` tool). The
-        generated inputs can be fed directly into the ``predict`` tool.
+        The model must already be served (see ``serve_model``).
 
         Parameters
         ----------
@@ -26,9 +25,8 @@ def register(mcp: FastMCP) -> None:
         n_samples : int, optional
             Number of example inputs to generate (default 5).
         mode : str, optional
-            Sampling strategy: ``"random"`` (default), ``"deterministic"`` (the
-            same inputs on every call), or ``"predefined"`` (drawn from the
-            model's own example file, if any).
+            ``"random"`` (default), ``"deterministic"`` (same inputs every
+            call), or ``"predefined"`` (from the model's example file, if any).
 
         Returns
         -------

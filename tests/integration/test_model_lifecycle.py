@@ -72,17 +72,26 @@ def test_model_complete_lifecycle(tmp_path):
 
     # Step 4: Generate example inputs from the served model
     n_samples = 2
-    samples = generate_inputs_helper(model_id, n_samples=n_samples, mode="random")
-    assert isinstance(samples, list), (
-        f"Generate should return list, got {type(samples)}"
+    generate_result = generate_inputs_helper(
+        model_id, n_samples=n_samples, mode="random"
     )
+    assert isinstance(generate_result, dict), (
+        f"Generate should return dict, got {type(generate_result)}"
+    )
+    assert generate_result.get("num_samples") == n_samples, (
+        f"Expected {n_samples} samples for {model_id}, got {generate_result}"
+    )
+    samples = generate_result["samples"]
     assert len(samples) == n_samples, (
         f"Expected {n_samples} samples for {model_id}, got {samples}"
     )
 
-    # Step 5: Run a prediction against the served model using the generated inputs
+    # Step 5: Run a prediction against the served model, feeding the file
+    # generate_inputs wrote straight into predict
     output_path = tmp_path / "predictions.csv"
-    predict_result = predict_helper(model_id, "\n".join(samples), str(output_path))
+    predict_result = predict_helper(
+        model_id, generate_result["output_path"], str(output_path)
+    )
     assert isinstance(predict_result, dict), (
         f"Predict should return dict, got {type(predict_result)}"
     )

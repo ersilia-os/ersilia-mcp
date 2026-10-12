@@ -12,6 +12,7 @@ import sys
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
+from rich.console import Console
 from rich.logging import RichHandler
 
 from ersilia_mcp.default import EOS_MCP
@@ -69,7 +70,9 @@ def _build_logger() -> ErsiliaLogger:
     log = logging.getLogger("ersilia_mcp")
     log.setLevel(logging.INFO)
     if not log.handlers:
-        handler = RichHandler(rich_tracebacks=True, show_path=False)
+        handler = RichHandler(
+            console=Console(stderr=True), rich_tracebacks=True, show_path=False
+        )
         handler.setFormatter(logging.Formatter(LOG_FORMAT))
         log.addHandler(handler)
     log.propagate = False

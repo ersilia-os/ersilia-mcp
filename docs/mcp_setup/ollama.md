@@ -49,6 +49,6 @@ Inside the `ollmcp` TUI, confirm the Ersilia tools (`search_model`, `fetch_model
 
 ## Devcontainer / Codespaces
 
-This repo ships a `.devcontainer/qwen/devcontainer.json` config that automates Steps 1, 2, and 4 — it installs Ollama, pulls `qwen3:1.7b`, and installs `ollmcp` on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-qwen" from the Codespaces config picker to use it. Step 5 (launching `ollmcp`) is the one command still left for you to run interactively.
+This repo ships a `.devcontainer/ollama/devcontainer.json` config that automates Steps 1, 2, and 4 — it installs Ollama, pulls `qwen3:1.7b`, and installs `ollmcp` on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-qwen" from the Codespaces config picker to use it. Step 5 (launching `ollmcp`) is the one command still left for you to run interactively.
 
 That config also sets `"hostRequirements": {"cpus": 4, "memory": "16gb"}`. This is sized for the Step 3 upgrade path (`qwen3:4b` at ~6GB resident) running concurrently with the Ersilia/Isaura containers that docker-in-docker brings up, not just the lighter default model — so upgrading to `qwen3:4b` inside an already-provisioned Codespace doesn't unexpectedly exceed what the machine was sized for.

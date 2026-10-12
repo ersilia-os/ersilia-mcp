@@ -1,5 +1,7 @@
 {
-  "name": "ersilia-mcp-qwen",
+  // Uses Ollama to download and run a small LLM locally (no API key, no
+  // hosted CLI) -- see docs/mcp_setup/ollama.md for the full setup.
+  "name": "ersilia-mcp-local-llm",
   // Conda is not optional: .mcp.json launches the server with
   // `conda run -n ersilia-mcp`, so the env name must match exactly.
   "image": "mcr.microsoft.com/devcontainers/miniconda:3",
@@ -18,8 +20,8 @@
     "cpus": 4,
     "memory": "16gb"
   },
-  "onCreateCommand": "bash .devcontainer/qwen/setup.sh",
-  "postAttachCommand": "bash .devcontainer/qwen/start-ollama.sh && bash .devcontainer/start-store.sh",
+  "onCreateCommand": "bash .devcontainer/ollama/setup.sh",
+  "postAttachCommand": "bash .devcontainer/ollama/start-ollama.sh && bash .devcontainer/start-store.sh",
   "forwardPorts": [9000, 9001, 11434],
   "portsAttributes": {
     "9000": {

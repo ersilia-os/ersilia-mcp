@@ -29,10 +29,11 @@ ollama pull qwen3:4b
 ## Step 4: Install ollmcp (in its own isolated environment)
 
 ```bash
-cd .devcontainer/ollama/ollmcp-env && poetry install
+conda create -y -n ollmcp python=3.12
+conda run --no-capture-output -n ollmcp pip install ollmcp==0.35.1
 ```
 
-This is a separate, nested Poetry project — not a bare `pip install ollmcp` into the same environment as `ersilia-mcp`. That matters: `ollmcp` depends on `mcp~=2.1.x`, which conflicts with this repo's own `mcp==1.28.1` pin (needed by `fastmcp`). Installing it into the same environment silently upgrades the shared `mcp` package and breaks the Ersilia MCP server itself. Keeping it in its own project/venv avoids that entirely.
+Don't install `ollmcp` into the `ersilia-mcp` env. It depends on `mcp~=2.1.x`, which conflicts with this repo's own `mcp==1.28.1` pin (needed by `fastmcp`): installing it there silently upgrades the shared `mcp` package and breaks the Ersilia MCP server itself. A separate env avoids that entirely. `ollmcp` needs Python 3.11 or newer.
 
 ## Step 5: Generate ollmcp's Server Config
 
@@ -47,7 +48,7 @@ bash .devcontainer/ollama/generate-mcp-config.sh
 From the repo root:
 
 ```bash
-cd .devcontainer/ollama/ollmcp-env && poetry run ollmcp --servers-json ~/.config/ersilia-mcp/ollama-mcp-servers.json --model qwen3:1.7b
+conda run --no-capture-output -n ollmcp ollmcp --servers-json ~/.config/ersilia-mcp/ollama-mcp-servers.json --model qwen3:1.7b
 ```
 
 ## Step 7: Verify
@@ -56,6 +57,6 @@ Inside the `ollmcp` TUI, confirm the Ersilia tools (`search_model`, `fetch_model
 
 ## Devcontainer / Codespaces
 
-This repo ships a `.devcontainer/ollama/devcontainer.json` config that automates Steps 1, 2, 4, and 5 — it installs Ollama, pulls `qwen3:1.7b`, installs `ollmcp` into its isolated Poetry env, and generates the server config on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-local-llm" from the Codespaces config picker to use it. Step 6 (launching `ollmcp`) is the one command still left for you to run interactively.
+This repo ships a `.devcontainer/ollama/devcontainer.json` config that automates Steps 1, 2, 4, and 5 — it installs Ollama, pulls `qwen3:1.7b`, installs `ollmcp` into its own `ollmcp` conda env, and generates the server config on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-local-llm" from the Codespaces config picker to use it. Step 6 (launching `ollmcp`) is the one command still left for you to run interactively.
 
 That config also sets `"hostRequirements": {"cpus": 4, "memory": "16gb"}`. This is sized for the Step 3 upgrade path (`qwen3:4b` at ~6GB resident) running concurrently with the Ersilia/Isaura containers that docker-in-docker brings up, not just the lighter default model — so upgrading to `qwen3:4b` inside an already-provisioned Codespace doesn't unexpectedly exceed what the machine was sized for.

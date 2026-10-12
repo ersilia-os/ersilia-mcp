@@ -14,7 +14,8 @@
     }
   },
   // Sized for Ollama's qwen3:4b (~6GB resident, see docs/mcp_setup/ollama.md)
-  // running alongside the Ersilia/Isaura containers docker-in-docker brings up
+  // running alongside the Ersilia/Isaura containers docker-in-docker brings
+  // up, not just the lighter qwen3:1.7b default.
   "hostRequirements": {
     "cpus": 4,
     "memory": "16gb"

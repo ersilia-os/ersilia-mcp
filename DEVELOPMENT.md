@@ -65,13 +65,13 @@ For a full step-by-step walkthrough of automatic vs. manual registration, caveat
 
 ### Using the Ollama (Local LLM) Codespace
 
-If you opened this repo in the `ersilia-mcp-local-llm` devcontainer config (`.devcontainer/ollama/`), Ollama, `ollmcp` (in its own `ollmcp` conda env, separate from `ersilia-mcp`'s own dependencies), and `qwen3:4b` are already installed/pulled by the time the container finishes creating, and the Ollama daemon is started automatically on every attach.
+If you opened this repo in the `ersilia-mcp-local-llm` devcontainer config (`.devcontainer/ollama/`), Ollama, `ollmcp` (in its own `ollmcp` conda env, separate from `ersilia-mcp`'s own dependencies), and `qwen3:1.7b` are already installed/pulled by the time the container finishes creating, and the Ollama daemon is started automatically on every attach.
 
 The one step that's still manual: start `ollmcp` yourself once the codespace is ready, from any directory:
 ```bash
 ersilia-chat
 ```
-This is a shell alias the devcontainer adds to `~/.bashrc`. It runs `conda run --no-capture-output -n ollmcp ollmcp --model qwen3:4b` from the repo root.
+This is a shell alias the devcontainer adds to `~/.bashrc`. It runs `conda run --no-capture-output -n ollmcp ollmcp --model qwen3:1.7b` from the repo root.
 
 See the [Ollama (Qwen3) Setup Guide](docs/mcp_setup/ollama.md) for the full walkthrough, including upgrading to the larger `qwen3:4b` model.
 

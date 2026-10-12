@@ -18,14 +18,14 @@ if ! conda env list | grep -qE "^ollmcp\s"; then
 fi
 conda run --no-capture-output -n ollmcp pip install ollmcp==0.35.1
 
-echo "Pulling qwen3:1.7b (one-time, ~1.4GB)..."
+echo "Pulling qwen3:4b (one-time, ~1.4GB)..."
 ollama serve &
 OLLAMA_PID=$!
 for _ in $(seq 1 15); do
   curl -sf --max-time 5 http://127.0.0.1:11434 >/dev/null 2>&1 && break
   sleep 2
 done
-ollama pull qwen3:1.7b
+ollama pull qwen3:4b
 kill "${OLLAMA_PID}"
 
 echo "Resolving .mcp.json for ollmcp..."
@@ -35,7 +35,7 @@ bash "$(dirname "$0")/resolve-mcp-config.sh"
 # runs from the repo root in a subshell.
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 if ! grep -q "alias ersilia-chat=" "${HOME}/.bashrc"; then
-  echo "alias ersilia-chat='(cd \"${REPO_ROOT}\" && conda run --no-capture-output -n ollmcp ollmcp --model qwen3:1.7b)'" >>"${HOME}/.bashrc"
+  echo "alias ersilia-chat='(cd \"${REPO_ROOT}\" && conda run --no-capture-output -n ollmcp ollmcp --model qwen3:4b)'" >>"${HOME}/.bashrc"
 fi
 
 echo "Setup complete. In a new terminal, run:"

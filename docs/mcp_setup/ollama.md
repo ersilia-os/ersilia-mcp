@@ -24,7 +24,7 @@ ollama pull qwen3:1.7b
 ollama pull qwen3:4b
 ```
 
-`qwen3:4b` is ~2.5GB / ~6GB RAM and noticeably better at tool-calling and reasoning than `qwen3:1.7b`. The tradeoff is explicit: better quality for more RAM. If you pull this, use `--model qwen3:4b` instead of `qwen3:1.7b` in Step 6.
+`qwen3:4b` is ~2.5GB / ~6GB RAM and generally stronger at reasoning than `qwen3:1.7b`, but it's slower on CPU and, in our testing, sometimes got stuck in an endless loop instead of answering. That's why `qwen3:1.7b` stays the default. If you try it, launch with `--model qwen3:4b` instead of `qwen3:1.7b` in Step 6 (or switch with `/model` inside `ollmcp`). If it starts looping, stop it with `Ctrl+C` and go back to `qwen3:1.7b`.
 
 ## Step 4: Install ollmcp (in its own isolated environment)
 

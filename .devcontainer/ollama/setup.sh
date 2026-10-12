@@ -34,9 +34,9 @@ bash "$(dirname "$0")/resolve-mcp-config.sh"
 # ollmcp finds .mcp.json by looking in the current directory, so the alias
 # runs from the repo root in a subshell.
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-if ! grep -q "alias ersilia-chat=" "${HOME}/.bashrc"; then
-  echo "alias ersilia-chat='(cd \"${REPO_ROOT}\" && conda run --no-capture-output -n ollmcp ollmcp --model qwen3:1.7b)'" >>"${HOME}/.bashrc"
-fi
+# Replace rather than skip an existing alias, so a changed model takes effect.
+sed -i '/alias ersilia-chat=/d' "${HOME}/.bashrc"
+echo "alias ersilia-chat='(cd \"${REPO_ROOT}\" && conda run --no-capture-output -n ollmcp ollmcp --model qwen3:1.7b)'" >>"${HOME}/.bashrc"
 
 echo "Setup complete. In a new terminal, run:"
 echo "  ersilia-chat"

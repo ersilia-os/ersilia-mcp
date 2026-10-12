@@ -25,5 +25,3 @@ kill "${OLLAMA_PID}"
 
 echo "Setup complete. From the repo root, run:"
 echo "  ollmcp --servers-json .mcp.json --model qwen3:1.7b"
-echo "For better tool-calling quality (needs more RAM), see the qwen3:4b"
-echo "upgrade instructions in docs/mcp_setup/ollama.md."

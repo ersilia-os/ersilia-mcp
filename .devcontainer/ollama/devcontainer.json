@@ -21,7 +21,7 @@
     "memory": "16gb"
   },
   "onCreateCommand": "bash .devcontainer/ollama/setup.sh",
-  "postAttachCommand": "bash .devcontainer/ollama/start-ollama.sh && bash .devcontainer/start-store.sh",
+  "postAttachCommand": "bash .devcontainer/start-store.sh && bash .devcontainer/ollama/start-ollama.sh",
   "forwardPorts": [9000, 9001, 11434],
   "portsAttributes": {
     "9000": {

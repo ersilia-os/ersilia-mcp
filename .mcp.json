@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "ersilia-mcp": {
-      "command": "${CONDA_EXE:-conda}",
+      "command": "conda",
       "args": ["run", "--no-capture-output", "-n", "ersilia-mcp", "ersilia-mcp"]
     }
   }

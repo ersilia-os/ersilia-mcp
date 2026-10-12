@@ -24,31 +24,38 @@ ollama pull qwen3:1.7b
 ollama pull qwen3:4b
 ```
 
-`qwen3:4b` is ~2.5GB / ~6GB RAM and noticeably better at tool-calling and reasoning than `qwen3:1.7b`. The tradeoff is explicit: better quality for more RAM. If you pull this, use `--model qwen3:4b` instead of `qwen3:1.7b` in Step 5.
+`qwen3:4b` is ~2.5GB / ~6GB RAM and noticeably better at tool-calling and reasoning than `qwen3:1.7b`. The tradeoff is explicit: better quality for more RAM. If you pull this, use `--model qwen3:4b` instead of `qwen3:1.7b` in Step 6.
 
-## Step 4: Install ollmcp
+## Step 4: Install ollmcp (in its own isolated environment)
 
 ```bash
-pip install --upgrade ollmcp
-# or: uv tool install --upgrade ollmcp
+cd .devcontainer/ollama/ollmcp-env && poetry install
 ```
 
-## Step 5: Run It
+This is a separate, nested Poetry project — not a bare `pip install ollmcp` into the same environment as `ersilia-mcp`. That matters: `ollmcp` depends on `mcp~=2.1.x`, which conflicts with this repo's own `mcp==1.28.1` pin (needed by `fastmcp`). Installing it into the same environment silently upgrades the shared `mcp` package and breaks the Ersilia MCP server itself. Keeping it in its own project/venv avoids that entirely.
+
+## Step 5: Generate ollmcp's Server Config
+
+```bash
+bash .devcontainer/ollama/generate-mcp-config.sh
+```
+
+`.mcp.json`'s `command` field uses `${CONDA_EXE:-conda}` — a Claude-Code-specific expansion syntax that `ollmcp` doesn't understand (it would try to literally exec a program named `${CONDA_EXE:-conda}` and fail). This script resolves that value with native bash expansion and writes a usable copy to `~/.config/ersilia-mcp/ollama-mcp-servers.json` by default.
+
+## Step 6: Run It
 
 From the repo root:
 
 ```bash
-ollmcp --servers-json .mcp.json --model qwen3:1.7b
+cd .devcontainer/ollama/ollmcp-env && poetry run ollmcp --servers-json ~/.config/ersilia-mcp/ollama-mcp-servers.json --model qwen3:1.7b
 ```
 
-`.mcp.json` is already in the `mcpServers` shape `ollmcp` expects, so it's passed straight through — no conversion needed.
-
-## Step 6: Verify
+## Step 7: Verify
 
 Inside the `ollmcp` TUI, confirm the Ersilia tools (`search_model`, `fetch_model`, `predict`, etc.) show up as connected.
 
 ## Devcontainer / Codespaces
 
-This repo ships a `.devcontainer/ollama/devcontainer.json` config that automates Steps 1, 2, and 4 — it installs Ollama, pulls `qwen3:1.7b`, and installs `ollmcp` on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-qwen" from the Codespaces config picker to use it. Step 5 (launching `ollmcp`) is the one command still left for you to run interactively.
+This repo ships a `.devcontainer/ollama/devcontainer.json` config that automates Steps 1, 2, 4, and 5 — it installs Ollama, pulls `qwen3:1.7b`, installs `ollmcp` into its isolated Poetry env, and generates the server config on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-local-llm" from the Codespaces config picker to use it. Step 6 (launching `ollmcp`) is the one command still left for you to run interactively.
 
 That config also sets `"hostRequirements": {"cpus": 4, "memory": "16gb"}`. This is sized for the Step 3 upgrade path (`qwen3:4b` at ~6GB resident) running concurrently with the Ersilia/Isaura containers that docker-in-docker brings up, not just the lighter default model — so upgrading to `qwen3:4b` inside an already-provisioned Codespace doesn't unexpectedly exceed what the machine was sized for.

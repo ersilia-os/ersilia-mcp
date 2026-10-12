@@ -46,6 +46,7 @@ This MCP server has been tested mainly on Claude (specifically using Claude Code
 Currently, we only have dedicated setup and registration documentation for:
 - [Claude Code Setup Guide](docs/mcp_setup/claude_code.md)
 - [Gemini Setup Guide](docs/mcp_setup/gemini.md)
+- [Ollama (Qwen3) Setup Guide](docs/mcp_setup/ollama.md)
 
 We would love to receive documentation updates and setup guides for other MCP clients and platforms. If you have successfully integrated this server with other environments, please feel free to submit a pull request with new client guides! See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 

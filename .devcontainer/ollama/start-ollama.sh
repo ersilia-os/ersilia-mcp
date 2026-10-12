@@ -6,8 +6,7 @@ set -uo pipefail
 
 if curl -sf --max-time 5 http://127.0.0.1:11434 >/dev/null 2>&1; then
   echo "Ollama already running."
-  echo "To chat with the Ersilia tools, from the repo root run:"
-  echo "  conda run --no-capture-output -n ollmcp ollmcp --servers-json ~/.config/ersilia-mcp/ollama-mcp-servers.json --model qwen3:1.7b"
+  echo "To chat with the Ersilia tools, run: ersilia-chat"
   exit 0
 fi
 
@@ -18,8 +17,7 @@ disown
 for _ in $(seq 1 10); do
   if curl -sf --max-time 5 http://127.0.0.1:11434 >/dev/null 2>&1; then
     echo "Ollama ready on port 11434."
-    echo "To chat with the Ersilia tools, from the repo root run:"
-    echo "  conda run --no-capture-output -n ollmcp ollmcp --servers-json ~/.config/ersilia-mcp/ollama-mcp-servers.json --model qwen3:1.7b"
+    echo "To chat with the Ersilia tools, run: ersilia-chat"
     exit 0
   fi
   sleep 2

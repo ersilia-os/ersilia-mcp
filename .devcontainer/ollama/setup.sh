@@ -28,10 +28,17 @@ done
 ollama pull qwen3:1.7b
 kill "${OLLAMA_PID}"
 
-echo "Generating ollmcp-compatible MCP server config..."
-bash "$(dirname "$0")/generate-mcp-config.sh"
+echo "Resolving .mcp.json for ollmcp..."
+bash "$(dirname "$0")/resolve-mcp-config.sh"
 
-echo "Setup complete. From the repo root, run:"
-echo "  conda run --no-capture-output -n ollmcp ollmcp --servers-json ~/.config/ersilia-mcp/ollama-mcp-servers.json --model qwen3:1.7b"
+# ollmcp finds .mcp.json by looking in the current directory, so the alias
+# runs from the repo root in a subshell.
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+if ! grep -q "alias ersilia-chat=" "${HOME}/.bashrc"; then
+  echo "alias ersilia-chat='(cd \"${REPO_ROOT}\" && conda run --no-capture-output -n ollmcp ollmcp --model qwen3:1.7b)'" >>"${HOME}/.bashrc"
+fi
+
+echo "Setup complete. In a new terminal, run:"
+echo "  ersilia-chat"
 echo "For better tool-calling quality (needs more RAM), see the qwen3:4b"
 echo "upgrade instructions in docs/mcp_setup/ollama.md."

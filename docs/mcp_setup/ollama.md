@@ -35,21 +35,29 @@ conda run --no-capture-output -n ollmcp pip install ollmcp==0.35.1
 
 Don't install `ollmcp` into the `ersilia-mcp` env. It depends on `mcp~=2.1.x`, which conflicts with this repo's own `mcp==1.28.1` pin (needed by `fastmcp`): installing it there silently upgrades the shared `mcp` package and breaks the Ersilia MCP server itself. A separate env avoids that entirely. `ollmcp` needs Python 3.11 or newer.
 
-## Step 5: Generate ollmcp's Server Config
+## Step 5: Resolve `.mcp.json` for ollmcp
 
 ```bash
-bash .devcontainer/ollama/generate-mcp-config.sh
+bash .devcontainer/ollama/resolve-mcp-config.sh
 ```
 
-`.mcp.json`'s `command` field uses `${CONDA_EXE:-conda}` — a Claude-Code-specific expansion syntax that `ollmcp` doesn't understand (it would try to literally exec a program named `${CONDA_EXE:-conda}` and fail). This script resolves that value with native bash expansion and writes a usable copy to `~/.config/ersilia-mcp/ollama-mcp-servers.json` by default.
+`.mcp.json`'s `command` field uses `${CONDA_EXE:-conda}` — a Claude-Code-specific expansion syntax that `ollmcp` doesn't understand (it would try to literally exec a program named `${CONDA_EXE:-conda}` and fail). This script rewrites `.mcp.json` in place with that value resolved, and marks the file `skip-worktree` so the machine-specific path doesn't get committed by accident.
+
+To undo it (e.g. to switch this checkout back to Claude Code):
+
+```bash
+git update-index --no-skip-worktree .mcp.json && git checkout .mcp.json
+```
 
 ## Step 6: Run It
 
 From the repo root:
 
 ```bash
-conda run --no-capture-output -n ollmcp ollmcp --servers-json ~/.config/ersilia-mcp/ollama-mcp-servers.json --model qwen3:1.7b
+conda run --no-capture-output -n ollmcp ollmcp --model qwen3:1.7b
 ```
+
+`ollmcp` picks up `.mcp.json` from the repo root automatically, so no `--servers-json` flag is needed.
 
 ## Step 7: Verify
 
@@ -57,6 +65,6 @@ Inside the `ollmcp` TUI, confirm the Ersilia tools (`search_model`, `fetch_model
 
 ## Devcontainer / Codespaces
 
-This repo ships a `.devcontainer/ollama/devcontainer.json` config that automates Steps 1, 2, 4, and 5 — it installs Ollama, pulls `qwen3:1.7b`, installs `ollmcp` into its own `ollmcp` conda env, and generates the server config on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-local-llm" from the Codespaces config picker to use it. Step 6 (launching `ollmcp`) is the one command still left for you to run interactively.
+This repo ships a `.devcontainer/ollama/devcontainer.json` config that automates Steps 1, 2, 4, and 5 — it installs Ollama, pulls `qwen3:1.7b`, installs `ollmcp` into its own `ollmcp` conda env, and resolves `.mcp.json` on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-local-llm" from the Codespaces config picker to use it. Step 6 (launching `ollmcp`) is the one command still left for you to run interactively. The devcontainer adds an `ersilia-chat` alias for it, which works from any directory.
 
 That config also sets `"hostRequirements": {"cpus": 4, "memory": "16gb"}`. This is sized for the Step 3 upgrade path (`qwen3:4b` at ~6GB resident) running concurrently with the Ersilia/Isaura containers that docker-in-docker brings up, not just the lighter default model — so upgrading to `qwen3:4b` inside an already-provisioned Codespace doesn't unexpectedly exceed what the machine was sized for.

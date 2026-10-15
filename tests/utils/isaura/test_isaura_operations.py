@@ -1,4 +1,4 @@
-"""Tests for the Isaura cache operations (helpers, read, and inspect)."""
+"""Tests for the Isaura operations (helpers, read, inspect, persist, and remove)."""
 
 import os
 from unittest.mock import patch
@@ -12,7 +12,9 @@ from ersilia_mcp.utils.isaura.isaura_operations import (
     _resolve_inputs,
     _write_input_csv,
     inspect,
+    persist,
     read,
+    remove,
     write,
 )
 
@@ -78,6 +80,15 @@ def test_resolve_inputs_string_writes_tempfile():
         assert requested == ["CCO", "CCC"]
         assert source_csv == temp_input_csv
         assert os.path.isfile(temp_input_csv)
+    finally:
+        os.remove(temp_input_csv)
+
+
+def test_resolve_inputs_string_splits_on_newlines():
+    """Test a newline-separated string is parsed like a comma-separated one."""
+    requested, _, temp_input_csv = _resolve_inputs("CCO\nCCC,CCCC\n")
+    try:
+        assert requested == ["CCO", "CCC", "CCCC"]
     finally:
         os.remove(temp_input_csv)
 
@@ -330,3 +341,106 @@ def test_write_error(mock_writer_class, tmp_path):
     result = write("eos3b5e", str(results_csv))
     assert result["status"] == "error"
     assert "store unreachable" in result["error"]
+
+
+# --- persist ----------------------------------------------------------------
+
+
+@patch(f"{_OPS}.IsauraCopy")
+def test_persist_copies_bucket(mock_copy_class):
+    """Test persist runs the copy and reports what was persisted."""
+    result = persist("eos3b5e", "myproject", "v2")
+    mock_copy_class.assert_called_once_with(
+        model_id="eos3b5e", model_version="v2", bucket="myproject"
+    )
+    mock_copy_class.return_value.copy.assert_called_once_with()
+    assert result == {
+        "status": "ok",
+        "model": "eos3b5e",
+        "version": "v2",
+        "bucket": "myproject",
+    }
+
+
+@patch(f"{_OPS}.IsauraCopy", side_effect=Exception("store unreachable"))
+def test_persist_error(mock_copy_class):
+    """Test persist returns an error status when the copy fails."""
+    result = persist("eos3b5e", "myproject")
+    assert result["status"] == "error"
+    assert "store unreachable" in result["error"]
+
+
+@patch(f"{_OPS}.IsauraCopy")
+def test_persist_catches_system_exit(mock_copy_class):
+    """Test persist turns an Isaura sys.exit into an error status."""
+    mock_copy_class.return_value.copy.side_effect = SystemExit(1)
+    result = persist("eos3b5e", "myproject")
+    assert result["status"] == "error"
+    assert "exited with code 1" in result["error"]
+    assert "~/eos/mcp/logs" in result["error"]
+
+
+# --- remove -----------------------------------------------------------------
+
+
+@patch(f"{_OPS}.IsauraMolRemover")
+def test_remove_reports_counts(mock_remover_class):
+    """Test remove forwards its arguments and reports the removal counts."""
+    remover = mock_remover_class.return_value.__enter__.return_value
+    remover.remove.return_value = (1, 1)
+
+    result = remove("eos3b5e", "CCO,CCC", "myproject", "v2")
+
+    kwargs = mock_remover_class.call_args.kwargs
+    assert kwargs["model_id"] == "eos3b5e"
+    assert kwargs["model_version"] == "v2"
+    assert kwargs["bucket"] == "myproject"
+    remover.remove.assert_called_once_with(show_progress=False)
+    assert result == {
+        "status": "ok",
+        "num_requested": 2,
+        "num_removed": 1,
+        "num_not_found": 1,
+    }
+
+
+@patch(f"{_OPS}.IsauraMolRemover")
+def test_remove_cleans_up_temp_csv(mock_remover_class):
+    """Test remove deletes the temp CSV it created for a string input."""
+    mock_remover_class.return_value.__enter__.return_value.remove.return_value = (1, 0)
+    remove("eos3b5e", "CCO", "myproject")
+    temp_csv = mock_remover_class.call_args.kwargs["input_csv"]
+    assert not os.path.exists(temp_csv)
+
+
+@patch(f"{_OPS}.IsauraMolRemover")
+def test_remove_reuses_user_csv(mock_remover_class, tmp_path):
+    """Test remove passes a user CSV straight through and leaves it in place."""
+    mock_remover_class.return_value.__enter__.return_value.remove.return_value = (2, 0)
+    csv_file = tmp_path / "rm.csv"
+    csv_file.write_text("input\nCCO\nCCC\n")
+
+    result = remove("eos3b5e", str(csv_file), "myproject")
+
+    assert mock_remover_class.call_args.kwargs["input_csv"] == str(csv_file)
+    assert csv_file.exists()
+    assert result["num_requested"] == 2
+
+
+@patch(f"{_OPS}.IsauraMolRemover")
+def test_remove_no_valid_inputs(mock_remover_class):
+    """Test remove returns an error status when there are no inputs."""
+    result = remove("eos3b5e", "  ,  ", "myproject")
+    assert result["status"] == "error"
+    mock_remover_class.assert_not_called()
+
+
+@patch(f"{_OPS}.IsauraMolRemover")
+def test_remove_catches_system_exit(mock_remover_class):
+    """Test remove turns an Isaura sys.exit (e.g. no index) into an error status."""
+    remover = mock_remover_class.return_value.__enter__.return_value
+    remover.remove.side_effect = SystemExit(1)
+    result = remove("eos3b5e", "CCO", "myproject")
+    assert result["status"] == "error"
+    assert "exited with code 1" in result["error"]
+    assert "~/eos/mcp/logs" in result["error"]

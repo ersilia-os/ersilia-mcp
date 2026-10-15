@@ -37,7 +37,7 @@ poetry install --all-extras
 - When CI fails with dependency resolution errors
 - Periodically (e.g., quarterly) to pick up security patches
 
-## Client Setup & Registration
+## MCP Client Setup & Registration
 
 This MCP server has been tested mainly on Claude (specifically using Claude Code), but it can be used with any model provider or host (Gemini, ChatGPT, Claude) that supports local stdio MCP servers.
 
@@ -77,23 +77,14 @@ ersilia-mcp
 
 TODO: Remove CLI commands as we add new mcp tools
 
-Two tools read from the [Isaura](https://github.com/ersilia-os/isaura) store (a
-MinIO instance managed by Isaura over Docker). Docker must be running.
+Three tools use the [Isaura](https://github.com/ersilia-os/isaura) store (a
+MinIO instance managed by Isaura over Docker) which needs to be running. Docker must be running.
 
 | Tool                               | Purpose                                                         |
 | ---------------------------------- | --------------------------------------------------------------- |
 | `inspect_isaura_cache`             | Counts which inputs are cached, without retrieving anything.    |
 | `read_precalculations_from_isaura` | Retrieves the cached subset and writes it to a CSV.             |
-
-Both take `model`, `input_data` (a CSV path or a comma-separated string),
-`version`, and `bucket`, and both accept `verbose` to list the inputs that are
-missing from the cache instead of only counting them. `inspect_isaura_cache`
-additionally lists the cached inputs when verbose;
-`read_precalculations_from_isaura` also takes an `output_path` for the
-retrieved results, and reports `columns` plus the `output_path` it wrote.
-
-Uncached inputs are skipped rather than failing the read, so a partial hit
-returns the cached rows and a `num_missing` count.
+| `write_precalculations_to_isaura`  | Stores a results CSV in the cache.                              |
 
 Start the local store — this creates the reserved `isaura-public` and
 `isaura-private` buckets:
@@ -103,19 +94,12 @@ isaura engine                # show Docker + MinIO status
 isaura configure --test-credentials   # verify local (and cloud) connectivity
 ```
 
-The store is empty on first start. Populate it by writing model outputs (the
-CSV must have an `input` or `smiles` column — e.g. the output of the `predict`
-tool):
-```bash
-isaura write -i data/eos3b5e_output.csv -m eos3b5e -v v1 -pn isaura-public
-```
-
 Stop the store when you're done:
 ```bash
 isaura engine --stop
 ```
-
-> After editing tool code, reinstall (`pip install -e .`) and reconnect the MCP
+> [!NOTE]
+> After editing tool code, restart and reconnect the MCP
 > server (`/mcp reconnect` in the client) so the running subprocess picks up
 > the changes — otherwise it keeps serving the previously imported code.
 
@@ -142,8 +126,10 @@ These test the MCP tools and utilities with mocked Ersilia API calls. Safe to ru
 ```bash
 poetry run pytest -v -m integration
 ```
+> [!NOTE]
+> It is not recommended to run these tests locally. See [CI/CD](#cicd) for info on the GitHub Action that runs these tests.
 
-These call the live Ersilia Model Hub APIs to validate the full model lifecycle (fetch, check, serve, generate_inputs, predict, cache, inspect, read, close, delete) against real data. Note: fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
+These call the live Ersilia Model Hub APIs to validate the full model lifecycle (fetch, check, serve, generate_inputs, predict, cache, inspect, read, close, delete) against real data. Fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
 
 The cache/inspect/read steps need a running Isaura store, so start it first (see [Isaura precalculation store](#isaura-precalculation-store)):
 ```bash

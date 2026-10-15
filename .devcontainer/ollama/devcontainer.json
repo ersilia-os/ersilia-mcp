@@ -17,8 +17,8 @@
   // running alongside the Ersilia/Isaura containers docker-in-docker brings
   // up, not just the lighter qwen3:1.7b default.
   "hostRequirements": {
-    "cpus": 4,
-    "memory": "16gb"
+    "cpus": 8,
+    "memory": "32gb"
   },
   "onCreateCommand": "bash .devcontainer/ollama/setup.sh",
   "postAttachCommand": "bash .devcontainer/start-store.sh && bash .devcontainer/ollama/start-ollama.sh",

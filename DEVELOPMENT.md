@@ -46,6 +46,7 @@ This MCP server has been tested mainly on Claude (specifically using Claude Code
 Currently, we only have dedicated setup and registration documentation for:
 - [Claude Code Setup Guide](docs/mcp_setup/claude_code.md)
 - [Gemini Setup Guide](docs/mcp_setup/gemini.md)
+- [Ollama (Qwen3) Setup Guide](docs/mcp_setup/ollama.md)
 
 We would love to receive documentation updates and setup guides for other MCP clients and platforms. If you have successfully integrated this server with other environments, please feel free to submit a pull request with new client guides! See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
@@ -61,6 +62,24 @@ claude mcp list
 You should see `ersilia-mcp: ... - ✔ Connected`.
 
 For a full step-by-step walkthrough of automatic vs. manual registration, caveats, and extension setups, refer to the [Claude Code Setup Guide](docs/mcp_setup/claude_code.md).
+
+### Using the Ollama (Local LLM) Codespace
+
+If you opened this repo in the `ersilia-mcp-local-llm` devcontainer config (`.devcontainer/ollama/`), Ollama, `ollmcp` (in its own `ollmcp` conda env, separate from `ersilia-mcp`'s own dependencies), and `qwen3:1.7b` are already installed/pulled by the time the container finishes creating, and the Ollama daemon is started automatically on every attach.
+
+The one step that's still manual: start `ollmcp` yourself once the codespace is ready, from any directory:
+```bash
+ersilia-chat
+```
+This is a shell alias the devcontainer adds to `~/.bashrc`. It runs `conda run --no-capture-output -n ollmcp ollmcp --model qwen3:1.7b` from the repo root.
+
+See the [Ollama (Qwen3) Setup Guide](docs/mcp_setup/ollama.md) for the full walkthrough, including upgrading to the larger `qwen3:4b` model.
+
+### Authenticating Claude Code in the Claude Codespace
+
+The default devcontainer (`.devcontainer/devcontainer.json`) installs Claude Code but doesn't configure authentication, so it prompts for an interactive OAuth login on first run — awkward in a fresh Codespace.
+
+To skip that prompt, set `ANTHROPIC_API_KEY` as a [Codespaces secret](https://docs.github.com/en/codespaces/managing-your-codespaces/managing-encrypted-secrets-for-your-codespace-or-codespaces) scoped to this repository (GitHub → Settings → Codespaces → "New secret", value from the [Anthropic Console](https://console.anthropic.com/)). Codespaces injects secrets as environment variables automatically, and Claude Code uses `ANTHROPIC_API_KEY` directly instead of prompting for OAuth whenever it's set. Never commit the key itself to the repo.
 
 ## Starting the server locally
 

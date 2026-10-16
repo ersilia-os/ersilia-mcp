@@ -1,0 +1,70 @@
+# Setting Up the Ersilia MCP Server with Ollama + Qwen3
+
+This is a fully local, offline, genuinely free way to use the Ersilia model tools: [Ollama](https://ollama.com) runs a small [Qwen3](https://ollama.com/library/qwen3) model on CPU, and [`ollmcp`](https://github.com/jonigl/mcp-client-for-ollama) bridges that local model to the Ersilia MCP server. No API key, no account, and no hosted CLI required.
+
+## Step 1: Install Ollama
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+See the [official installation guide](https://ollama.com/download) for other platforms. Start the daemon with `ollama serve` (or let its systemd unit handle that on a real machine).
+
+## Step 2: Pull the Default Model
+
+```bash
+ollama pull qwen3:1.7b
+```
+
+`qwen3:1.7b` is ~1.4GB to download and needs ~4GB of resident RAM — the default here because it's the lighter, safer choice on a shared or constrained machine.
+
+## Step 3 (Optional): Upgrade to a Larger Model
+
+```bash
+ollama pull qwen3:4b
+```
+
+`qwen3:4b` is ~2.5GB / ~6GB RAM and generally stronger at reasoning than `qwen3:1.7b`, but it's slower on CPU and, in our testing, sometimes got stuck in an endless loop instead of answering. That's why `qwen3:1.7b` stays the default. If you try it, launch with `--model qwen3:4b` instead of `qwen3:1.7b` in Step 6 (or switch with `/model` inside `ollmcp`). If it starts looping, stop it with `Ctrl+C` and go back to `qwen3:1.7b`.
+
+## Step 4: Install ollmcp (in its own isolated environment)
+
+```bash
+conda create -y -n ollmcp python=3.12
+conda run --no-capture-output -n ollmcp pip install ollmcp==0.35.1
+```
+
+Don't install `ollmcp` into the `ersilia-mcp` env. It depends on `mcp~=2.1.x`, which conflicts with this repo's own `mcp==1.28.1` pin (needed by `fastmcp`): installing it there silently upgrades the shared `mcp` package and breaks the Ersilia MCP server itself. A separate env avoids that entirely. `ollmcp` needs Python 3.11 or newer.
+
+## Step 5: Resolve `.mcp.json` for ollmcp
+
+```bash
+bash .devcontainer/ollama/resolve-mcp-config.sh
+```
+
+`.mcp.json`'s `command` field uses `${CONDA_EXE:-conda}` — a Claude-Code-specific expansion syntax that `ollmcp` doesn't understand (it would try to literally exec a program named `${CONDA_EXE:-conda}` and fail). This script rewrites `.mcp.json` in place with that value resolved, and marks the file `skip-worktree` so the machine-specific path doesn't get committed by accident.
+
+To undo it (e.g. to switch this checkout back to Claude Code):
+
+```bash
+git update-index --no-skip-worktree .mcp.json && git checkout .mcp.json
+```
+
+## Step 6: Run It
+
+From the repo root:
+
+```bash
+conda run --no-capture-output -n ollmcp ollmcp --model qwen3:1.7b
+```
+
+`ollmcp` picks up `.mcp.json` from the repo root automatically, so no `--servers-json` flag is needed.
+
+## Step 7: Verify
+
+Inside the `ollmcp` TUI, confirm the Ersilia tools (`search_model`, `fetch_model`, `predict`, etc.) show up as connected.
+
+## Devcontainer / Codespaces
+
+This repo ships a `.devcontainer/ollama/devcontainer.json` config that automates Steps 1, 2, 4, and 5 — it installs Ollama, pulls `qwen3:1.7b`, installs `ollmcp` into its own `ollmcp` conda env, and resolves `.mcp.json` on container creation, and keeps the Ollama daemon running on every attach. Pick "ersilia-mcp-local-llm" from the Codespaces config picker to use it. Step 6 (launching `ollmcp`) is the one command still left for you to run interactively. The devcontainer adds an `ersilia-chat` alias for it, which works from any directory.
+
+That config also sets `"hostRequirements": {"cpus": 4, "memory": "16gb"}`. This is sized for the Step 3 upgrade path (`qwen3:4b` at ~6GB resident) running concurrently with the Ersilia/Isaura containers that docker-in-docker brings up, not just the lighter default model — so upgrading to `qwen3:4b` inside an already-provisioned Codespace doesn't unexpectedly exceed what the machine was sized for.

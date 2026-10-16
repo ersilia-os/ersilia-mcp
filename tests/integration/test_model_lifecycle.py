@@ -1,16 +1,20 @@
 """Integration test for complete model lifecycle (calls real Ersilia APIs).
 
 Tests the full workflow: fetch → check → serve → generate_inputs → predict →
-cache → inspect → read → close → delete
+cache → inspect → read → remove → persist → close → delete
 
-The cache/inspect/read steps require a running Isaura store (``isaura engine
---start``); see DEVELOPMENT.md.
+The cache/inspect/read/remove/persist steps require a running Isaura store
+(``isaura engine --start``); see DEVELOPMENT.md.
 
 Run with: pytest tests/integration/test_model_lifecycle.py -v
 Skip with: pytest -m "not integration"
 """
 
 import csv
+import subprocess
+import sys
+import uuid
+from pathlib import Path
 
 import pytest
 
@@ -24,6 +28,20 @@ from ersilia_mcp.utils.model_operations import (
     serve_model_helper,
 )
 from ersilia_mcp.utils.predict import predict_helper
+
+
+def _isaura_cli() -> list:
+    """Build the command prefix that runs the ``isaura`` console script.
+
+    The CLI is installed alongside ``python`` in the active env, which isn't
+    guaranteed to be on ``PATH`` when pytest is launched directly. The script
+    is run *through* that interpreter rather than executed directly: a console
+    script whose shebang was never rewritten from ``#!python`` cannot be
+    exec'd, and ``subprocess`` reports the script itself as missing even
+    though it exists.
+    """
+    candidate = Path(sys.executable).parent / "isaura"
+    return [sys.executable, str(candidate)] if candidate.exists() else ["isaura"]
 
 
 @pytest.mark.integration
@@ -180,11 +198,64 @@ def test_model_complete_lifecycle(tmp_path):
         f"Expected no missing inputs, got {verbose_result}"
     )
 
-    # Step 10: Close the model service
+    # Step 10: Remove and persist, in a throwaway project bucket so the shared
+    # isaura-public bucket is left untouched by the destructive step
+    project = f"mcp-it-{uuid.uuid4().hex[:8]}"
+    try:
+        create = subprocess.run(
+            [*_isaura_cli(), "create", "-pn", project, "--access", "private"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert create.returncode == 0, f"isaura create failed: {create.stderr}"
+
+        write_project = isaura_operations.write(
+            model_id, str(output_path), bucket=project
+        )
+        assert write_project["status"] == "ok", f"Write failed: {write_project}"
+
+        # Remove one input, plus one that was never stored
+        removed_input = samples[0]
+        remove_result = isaura_operations.remove(
+            model_id, f"{removed_input},NOT_A_STORED_INPUT", project
+        )
+        assert remove_result == {
+            "status": "ok",
+            "num_requested": 2,
+            "num_removed": 1,
+            "num_not_found": 1,
+        }, f"Unexpected remove result: {remove_result}"
+
+        after_remove = isaura_operations.inspect(
+            model_id, ",".join(samples), bucket=project, verbose=True
+        )
+        assert after_remove["status"] == "ok", f"Inspect failed: {after_remove}"
+        assert after_remove["missing"] == [removed_input], (
+            f"Only the removed input should be missing, got {after_remove}"
+        )
+
+        # Persist the remaining rows out of the project bucket
+        persist_result = isaura_operations.persist(model_id, project)
+        assert persist_result == {
+            "status": "ok",
+            "model": model_id,
+            "version": "v1",
+            "bucket": project,
+        }, f"Persist failed: {persist_result}"
+    finally:
+        subprocess.run(
+            [*_isaura_cli(), "destroy", "-pn", project, "--yes"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    # Step 11: Close the model service
     close_result = close_model_helper(model_id)
     assert close_result is True
 
-    # Step 11: Delete the model
+    # Step 12: Delete the model
     delete_result = delete_model_helper(model_id)
     assert delete_result is True
     check_result = check_model_fetched_helper(model_id)

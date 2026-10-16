@@ -77,7 +77,7 @@ ersilia-mcp
 
 TODO: Remove CLI commands as we add new mcp tools
 
-Three tools use the [Isaura](https://github.com/ersilia-os/isaura) store (a
+Five tools use the [Isaura](https://github.com/ersilia-os/isaura) store (a
 MinIO instance managed by Isaura over Docker) which needs to be running. Docker must be running.
 
 | Tool                               | Purpose                                                         |
@@ -85,6 +85,15 @@ MinIO instance managed by Isaura over Docker) which needs to be running. Docker 
 | `inspect_isaura_cache`             | Counts which inputs are cached, without retrieving anything.    |
 | `read_precalculations_from_isaura` | Retrieves the cached subset and writes it to a CSV.             |
 | `write_precalculations_to_isaura`  | Stores a results CSV in the cache.                              |
+| `persist_isaura_data`              | Routes rows from a project bucket into `isaura-public`/`isaura-private`. |
+| `remove_from_isaura`               | Removes specific inputs from a model/version in a bucket.       |
+
+`persist_isaura_data` takes `model`, a required `bucket` (the project bucket to
+persist from) and `version`. `remove_from_isaura` takes `model`, `input_data`
+(a CSV path or a comma/newline-separated string), a required `bucket` and
+`version`, and reports `num_removed` and `num_not_found`. Removal is
+destructive. To delete a whole model/version or project bucket, use the CLI:
+`isaura destroy -pn myproject -m eos3b5e -v v1` (or `isaura destroy -pn myproject`).
 
 Start the local store — this creates the reserved `isaura-public` and
 `isaura-private` buckets:
@@ -129,7 +138,7 @@ poetry run pytest -v -m integration
 > [!NOTE]
 > It is not recommended to run these tests locally. See [CI/CD](#cicd) for info on the GitHub Action that runs these tests.
 
-These call the live Ersilia Model Hub APIs to validate the full model lifecycle (fetch, check, serve, generate_inputs, predict, cache, inspect, read, close, delete) against real data. Fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
+These call the live Ersilia Model Hub APIs to validate the full model lifecycle (fetch, check, serve, generate_inputs, predict, cache, inspect, read, remove, persist, close, delete) against real data. Fetching models can populate `~/eos/repository/`, so clean up afterwards if needed.
 
 The cache/inspect/read steps need a running Isaura store, so start it first (see [Isaura precalculation store](#isaura-precalculation-store)):
 ```bash
@@ -138,7 +147,7 @@ poetry run pytest -v -m integration
 isaura engine --stop
 ```
 
-The lifecycle test writes its predictions into the `isaura-public` bucket, so the store accumulates rows across runs.
+The lifecycle test writes its predictions into the `isaura-public` bucket, so the store accumulates rows across runs. Its remove/persist steps use a throwaway `mcp-it-*` project bucket (made with `isaura create -pn <name> --access private`) that is destroyed afterwards.
 
 ## CI/CD
 

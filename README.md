@@ -17,19 +17,23 @@ and fetch, serve, and run its AI/ML models, all over stdio.
 | Tool      | `inspect_isaura_cache`             | Reports how many inputs are already cached in Isaura.  |
 | Tool      | `read_precalculations_from_isaura` | Retrieves cached results instead of recomputing them.  |
 | Tool      | `write_precalculations_to_isaura`  | Stores results so they can be read back later.         |
+| Tool      | `persist_isaura_data`              | Routes a project bucket's rows into the shared Isaura buckets. |
+| Tool      | `remove_from_isaura`               | Removes specific inputs from a model's data in a bucket. |
 
 A typical workflow is `search_model` → `fetch_model` → `serve_model` → `predict`
 → `close_model`. You can optionally call `generate_inputs` after serving to
 sample example inputs to feed into `predict`, and `delete_model` to remove the
 model from local storage.
 
-The last three tools use an [Isaura](https://github.com/ersilia-os/isaura)
+The last five tools use an [Isaura](https://github.com/ersilia-os/isaura)
 precalculation store, which holds results computed earlier. Call
 `inspect_isaura_cache` to see how much of your input is already covered, then
 `read_precalculations_from_isaura` to pull those results back without serving
 the model at all. Feed a `predict` output CSV to
-`write_precalculations_to_isaura` to cache results for next time. A running
-store is required; see [DEVELOPMENT.md](DEVELOPMENT.md).
+`write_precalculations_to_isaura` to cache results for next time.
+`persist_isaura_data` and `remove_from_isaura` manage what is stored (both
+require an explicit `bucket`; removal is destructive). A running store is
+required; see [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Installation
 

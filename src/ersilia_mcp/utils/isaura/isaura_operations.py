@@ -5,12 +5,45 @@ import os
 import tempfile
 import traceback
 
-from isaura.manage import IsauraInspect, IsauraReader, IsauraWriter
+from isaura.manage import (
+    IsauraCopy,
+    IsauraInspect,
+    IsauraMolRemover,
+    IsauraReader,
+    IsauraWriter,
+)
 
 from ersilia_mcp.utils.logging import logger
 
 # Columns Isaura accepts as the molecule/lookup key, in priority order.
 _INPUT_COLUMNS = ("input", "smiles")
+
+
+def _error_message(exc: BaseException) -> str:
+    """
+    Build a readable error message for the tool response.
+
+    Isaura signals some failures (e.g. a missing bucket) with ``sys.exit(1)``
+    after logging the cause, so ``str(exc)`` is just the exit code.
+
+    Parameters
+    ----------
+    exc : BaseException
+        The exception (or ``SystemExit``) that was caught.
+
+    Returns
+    -------
+    str
+        ``str(exc)`` for ordinary exceptions; for ``SystemExit`` a message
+        pointing to the MCP server log (``~/eos/mcp/logs``) for details.
+    """
+    if isinstance(exc, SystemExit):
+        return (
+            f"Isaura exited with code {exc.code}; check the MCP server log "
+            "in ~/eos/mcp/logs for the cause (e.g. the bucket or model "
+            "version does not exist)"
+        )
+    return str(exc)
 
 
 def _write_input_csv(inputs: list) -> str:
@@ -77,7 +110,7 @@ def _resolve_inputs(input_data: str) -> tuple:
     ----------
     input_data : str
         Either a path to a CSV with an ``input``/``smiles`` column, or a
-        comma-separated string of inputs.
+        string of inputs separated by commas or newlines.
 
     Returns
     -------
@@ -89,7 +122,8 @@ def _resolve_inputs(input_data: str) -> tuple:
     """
     if os.path.isfile(input_data):
         return _csv_inputs(input_data), input_data, None
-    requested = [s.strip() for s in input_data.split(",") if s.strip()]
+    requested = [s.strip() for s in input_data.replace("\n", ",").split(",")]
+    requested = [s for s in requested if s]
     if not requested:
         return [], None, None
     temp_input_csv = _write_input_csv(requested)
@@ -246,7 +280,7 @@ def read(
     except (Exception, SystemExit) as e:  # noqa: BLE001
         logger.error(f"Error reading precalculations for {model_id}: {e!s}")
         logger.error(traceback.format_exc())
-        return {"status": "error", "error": str(e)}
+        return {"status": "error", "error": _error_message(e)}
     finally:
         for path in (temp_input_csv, subset_csv):
             if path is not None and os.path.exists(path):
@@ -410,7 +444,120 @@ def inspect(
     except (Exception, SystemExit) as e:  # noqa: BLE001
         logger.error(f"Error inspecting cache for {model_id}: {e!s}")
         logger.error(traceback.format_exc())
-        return {"status": "error", "error": str(e)}
+        return {"status": "error", "error": _error_message(e)}
+    finally:
+        if temp_input_csv is not None and os.path.exists(temp_input_csv):
+            os.remove(temp_input_csv)
+
+
+def persist(model_id: str, bucket: str, version: str = "v1") -> dict:
+    """
+    Route rows from a project bucket into ``isaura-public``/``isaura-private``.
+
+    Parameters
+    ----------
+    model_id : str
+        Model identifier (e.g., ``eos3b5e``).
+    bucket : str
+        Project bucket to persist from.
+    version : str, optional
+        Model version, by default ``"v1"``.
+
+    Returns
+    -------
+    dict
+        On success::
+
+            {"status": "ok", "model": str, "version": str, "bucket": str}
+
+        On failure::
+
+            {"status": "error", "error": str}
+    """
+    try:
+        logger.info(f"Persisting model {model_id} ({version}) from bucket {bucket}")
+        IsauraCopy(model_id=model_id, model_version=version, bucket=bucket).copy()
+        logger.success(f"Persisted {model_id} ({version}) from bucket {bucket}")
+        return {
+            "status": "ok",
+            "model": model_id,
+            "version": version,
+            "bucket": bucket,
+        }
+    except (Exception, SystemExit) as e:  # noqa: BLE001
+        logger.error(f"Error persisting {model_id} from {bucket}: {e!s}")
+        logger.error(traceback.format_exc())
+        return {"status": "error", "error": _error_message(e)}
+
+
+def remove(
+    model_id: str,
+    input_data: str,
+    bucket: str,
+    version: str = "v1",
+) -> dict:
+    """
+    Remove specific inputs from a model/version stored in a bucket.
+
+    Parameters
+    ----------
+    model_id : str
+        Model identifier (e.g., ``eos3b5e``).
+    input_data : str
+        Either a path to a CSV with an ``input``/``smiles`` column, or a string
+        of inputs separated by commas or newlines.
+    bucket : str
+        Project bucket to remove from.
+    version : str, optional
+        Model version, by default ``"v1"``.
+
+    Returns
+    -------
+    dict
+        On success::
+
+            {
+                "status": "ok",
+                "num_requested": int,
+                "num_removed": int,
+                "num_not_found": int,
+            }
+
+        On failure::
+
+            {"status": "error", "error": str}
+    """
+    temp_input_csv = None
+    try:
+        requested, source_csv, temp_input_csv = _resolve_inputs(input_data)
+        if not requested:
+            logger.error("No valid inputs found to remove")
+            return {"status": "error", "error": "No valid inputs provided"}
+
+        logger.info(
+            f"Removing {len(requested)} input(s) of model {model_id} "
+            f"({version}) from bucket {bucket}"
+        )
+        # show_progress=False: the Rich progress bar must not write to stdio.
+        with IsauraMolRemover(
+            model_id=model_id,
+            model_version=version,
+            bucket=bucket,
+            input_csv=source_csv,
+        ) as remover:
+            n_removed, n_not_found = remover.remove(show_progress=False)
+
+        logger.success(f"Removed {n_removed} row(s); {n_not_found} not found")
+        return {
+            "status": "ok",
+            "num_requested": len(requested),
+            "num_removed": n_removed,
+            "num_not_found": n_not_found,
+        }
+    except (Exception, SystemExit) as e:  # noqa: BLE001
+        logger.error(f"Error removing inputs for {model_id}: {e!s}")
+        logger.error(traceback.format_exc())
+        return {"status": "error", "error": _error_message(e)}
     finally:
         if temp_input_csv is not None and os.path.exists(temp_input_csv):
             os.remove(temp_input_csv)

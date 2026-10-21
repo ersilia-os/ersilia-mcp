@@ -27,7 +27,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Set up conda
-        uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install poetry and dependencies
@@ -51,7 +51,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Set up conda
-        uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb
         with:
           python-version: "3.12"
       - name: Install poetry and dependencies

@@ -32,7 +32,9 @@ def register(mcp: FastMCP) -> None:
         bucket : str, optional
             Project bucket, by default ``"isaura-public"``.
         verbose : bool, optional
-            When true, return the full list of cached and missing inputs (not just counts).
+            When true, also list the cached and missing inputs, up to 100
+            each (not just counts). Longer lists are cut and written to a text
+            file.
 
         Returns
         -------
@@ -42,8 +44,11 @@ def register(mcp: FastMCP) -> None:
                 - num_cached: How many are already cached
                 - num_missing: How many are not cached
             When ``verbose`` is ``True``, also includes:
-                - cached: The inputs that are cached
-                - missing: The inputs that are not cached
+                - cached: Up to 100 inputs that are cached
+                - missing: Up to 100 inputs that are not cached
+                - cached_truncated / cached_path, missing_truncated /
+                  missing_path: set when a list is longer, with a text file
+                  holding the full list
             On failure (e.g. the local store is unreachable), ``status`` is
             ``"error"`` with an ``error`` message.
         """

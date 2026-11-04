@@ -15,4 +15,4 @@ def test_search_model_tool():
             result.structured_content["result"]
             == "eos4zfy  maip-malaria — MAIP test (score: 12.0)"
         )
-        mock_search.assert_called_once_with("malaria")
+        mock_search.assert_called_once_with("malaria", 10)

@@ -444,3 +444,48 @@ def test_remove_catches_system_exit(mock_remover_class):
     assert result["status"] == "error"
     assert "exited with code 1" in result["error"]
     assert "~/eos/mcp/logs" in result["error"]
+
+
+# --- listing caps -----------------------------------------------------------
+
+
+@patch(f"{_OPS}._inspect_cached")
+def test_inspect_verbose_caps_long_lists_and_spills_to_file(mock_cached):
+    """Test long verbose lists are cut inline and written in full to a file."""
+    requested = [f"C{i}" for i in range(250)]
+    mock_cached.return_value = requested[:150]
+
+    result = inspect("eos3b5e", ",".join(requested), verbose=True)
+
+    try:
+        assert result["num_cached"] == 150
+        assert result["num_missing"] == 100
+        assert len(result["cached"]) == 100
+        assert result["cached_truncated"] is True
+        with open(result["cached_path"]) as f:
+            assert f.read().splitlines() == requested[:150]
+        # Exactly at the cap: nothing is truncated or spilled.
+        assert len(result["missing"]) == 100
+        assert "missing_truncated" not in result
+        assert "missing_path" not in result
+    finally:
+        os.remove(result["cached_path"])
+
+
+@patch(f"{_OPS}.IsauraReader")
+@patch(f"{_OPS}._inspect_cached")
+def test_read_verbose_caps_missing_list(mock_cached, mock_reader_class):
+    """Test read cuts a long missing list and writes the rest to a file."""
+    requested = [f"C{i}" for i in range(150)]
+    mock_cached.return_value = []
+
+    result = read("eos3b5e", ",".join(requested), verbose=True)
+
+    try:
+        assert result["num_missing"] == 150
+        assert result["missing"] == requested[:100]
+        assert result["missing_truncated"] is True
+        with open(result["missing_path"]) as f:
+            assert f.read().splitlines() == requested
+    finally:
+        os.remove(result["missing_path"])

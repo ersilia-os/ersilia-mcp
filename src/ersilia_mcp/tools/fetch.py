@@ -17,6 +17,9 @@ def register(mcp: FastMCP) -> None:
     async def fetch_model(model: str) -> bool:
         """Fetch a model from the Ersilia model hub. This can take a few minutes.
 
+        Safe to call on an already-fetched model (it returns immediately), so
+        there is no need to call ``check_model_fetched`` first.
+
         Parameters
         ----------
         model : str

@@ -8,6 +8,10 @@ from ersilia_mcp.utils.logging import logger
 
 ERSILIA_SEARCH_API_BASE_URI = "https://search-engine-six-iota.vercel.app"
 
+# Each result line costs the client tokens, so return few by default.
+DEFAULT_LIMIT = 10
+MAX_LIMIT = 50
+
 
 def format_search_results(results: list) -> list:
     """Format search API results as compact lines.
@@ -41,23 +45,27 @@ def format_search_results(results: list) -> list:
     return lines
 
 
-def search_catalog(query: str) -> str:
+def search_catalog(query: str, limit: int = DEFAULT_LIMIT) -> str:
     """Search the Ersilia model hub by keyword via the search API.
 
     Parameters
     ----------
     query : str
         Search query (e.g. "malaria", "toxicity").
+    limit : int, default=10
+        Maximum number of results to return (clamped to 1-50).
 
     Returns
     -------
     str
         One ``identifier  slug — title`` line per result, plus score and
-        matched keywords, or a message on error.
+        matched keywords, a final note when more matches exist than were
+        returned, or a message on error.
     """
+    limit = max(1, min(limit, MAX_LIMIT))
     try:
         url = urljoin(ERSILIA_SEARCH_API_BASE_URI, "/search")
-        params = {"text": query, "all_statuses": False, "limit": 50}
+        params = {"text": query, "all_statuses": False, "limit": limit}
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
@@ -68,7 +76,14 @@ def search_catalog(query: str) -> str:
         results = data.get("results", [])
         lines = format_search_results(results)
         logger.success("Found %d results for query '%s'", len(lines), query)
-        return "\n".join(lines) or f"No results found for query '{query}'."
+        if not lines:
+            return f"No results found for query '{query}'."
+        if count > len(lines):
+            lines.append(
+                f"Showing {len(lines)} of {count} matches; refine the query "
+                "or raise limit to see more."
+            )
+        return "\n".join(lines)
     except requests.RequestException as exc:
         logger.error("Search API request failed: %s", exc)
         return f"Search API request failed: {exc}"

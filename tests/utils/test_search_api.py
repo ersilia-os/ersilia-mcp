@@ -109,3 +109,35 @@ def test_search_catalog_request_failure(mock_get):
     mock_get.side_effect = Exception("Network error")
     output = search_catalog("malaria")
     assert "Search API request failed" in output or "Failed to search catalog" in output
+
+
+@patch("ersilia_mcp.utils.search_api.requests.get")
+def test_search_catalog_sends_limit(mock_get):
+    """Test the default limit is small and a caller-supplied limit is clamped."""
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"count": 0, "results": []}
+    mock_get.return_value = mock_response
+
+    search_catalog("malaria")
+    assert mock_get.call_args.kwargs["params"]["limit"] == 10
+
+    search_catalog("malaria", limit=500)
+    assert mock_get.call_args.kwargs["params"]["limit"] == 50
+
+    search_catalog("malaria", limit=0)
+    assert mock_get.call_args.kwargs["params"]["limit"] == 1
+
+
+@patch("ersilia_mcp.utils.search_api.requests.get")
+def test_search_catalog_notes_when_more_matches_exist(mock_get):
+    """Test the output says so when there are more matches than were returned."""
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "count": 37,
+        "results": [{"Identifier": "eos2gth", "Slug": "maip", "Title": "MAIP"}],
+    }
+    mock_get.return_value = mock_response
+
+    output = search_catalog("malaria", limit=1)
+
+    assert output.splitlines()[-1].startswith("Showing 1 of 37 matches")

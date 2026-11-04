@@ -24,8 +24,11 @@ from ersilia_mcp.tools.isaura import (
     isaura_writer,
 )
 from ersilia_mcp.utils.logging import logger
+from ersilia_mcp.utils.stdio_guard import StdoutGuard
 
 mcp = FastMCP("ersilia-mcp")
+# Ersilia prints to stdout, which is the protocol channel over stdio.
+mcp.add_middleware(StdoutGuard())
 close.register(mcp)
 delete.register(mcp)
 fetch.register(mcp)

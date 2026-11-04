@@ -31,11 +31,11 @@ def register(mcp: FastMCP) -> None:
         Returns
         -------
         dict
-            A summary containing:
+            On success, ``status`` is ``"ok"`` with:
                 - output_path: The CSV file the predictions were written to
                 - num_predictions: The number of predictions produced
                 - columns: The result columns
-            or an empty dict if prediction failed.
+            On failure, ``status`` is ``"error"`` with an ``error`` message.
         """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(

@@ -41,6 +41,7 @@ def test_predict_helper_success(mock_model_class, tmp_path):
     result = predict_helper("eos3b5e", "CCO,CCC", str(output_path))
 
     assert result == {
+        "status": "ok",
         "output_path": str(output_path),
         "num_predictions": 2,
         "columns": ["input", "value"],
@@ -67,20 +68,20 @@ def test_predict_helper_default_output_path(mock_model_class):
 
 @patch("ersilia_mcp.utils.predict.Model")
 def test_predict_helper_no_valid_inputs(mock_model_class):
-    """Test predict_helper returns an empty dict when there are no inputs."""
+    """Test predict_helper returns an error when there are no inputs."""
     result = predict_helper("eos3b5e", "  ,  \n ")
 
-    assert result == {}
+    assert result == {"status": "error", "error": "No valid inputs provided"}
     mock_model_class.assert_not_called()
 
 
 @patch("ersilia_mcp.utils.predict.Model")
 def test_predict_helper_run_fails(mock_model_class):
-    """Test predict_helper returns an empty dict when the model run errors."""
+    """Test predict_helper returns the error when the model run fails."""
     mock_instance = MagicMock()
     mock_instance.run.side_effect = Exception("Model crashed")
     mock_model_class.return_value = mock_instance
 
     result = predict_helper("eos3b5e", "CCO")
 
-    assert result == {}
+    assert result == {"status": "error", "error": "Model crashed"}

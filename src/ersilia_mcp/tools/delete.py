@@ -11,8 +11,10 @@ def register(mcp: FastMCP) -> None:
     """Register the delete model tool on the MCP server."""
 
     @mcp.tool(timeout=300.0)
-    async def delete_model(model: str) -> bool:
-        """Delete a fetched model from local storage.
+    async def delete_model(model: str) -> dict:
+        """Permanently delete a fetched model from local storage.
+
+        Destructive: the model must be fetched again to be used.
 
         Parameters
         ----------
@@ -21,8 +23,9 @@ def register(mcp: FastMCP) -> None:
 
         Returns
         -------
-        bool
-            True if deleted, False otherwise.
+        dict
+            ``status`` is ``"ok"`` if deleted, or ``"error"`` with an ``error``
+            message.
         """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, delete_model_helper, model)

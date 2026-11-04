@@ -51,33 +51,27 @@ def test_model_complete_lifecycle(tmp_path):
 
     # Step 1: Fetch the model
     fetch_result = fetch_model_helper(model_id)
-    assert isinstance(fetch_result, bool), (
-        f"Fetch should return bool, got {type(fetch_result)}"
+    assert fetch_result.get("status") == "ok", (
+        f"Fetch failed for {model_id}: {fetch_result}"
     )
-    assert fetch_result is True, f"Fetch failed for {model_id}"
 
     # Step 2: Check that model is fetched
     check_result = check_model_fetched_helper(model_id)
-    assert isinstance(check_result, bool), (
-        f"Check should return bool, got {type(check_result)}"
-    )
-    assert check_result is True, f"Model {model_id} should be fetched"
+    assert check_result.get("fetched") is True, f"Model {model_id} should be fetched"
 
     # Step 3: Serve the model
     serve_result = serve_model_helper(model_id)
-    assert isinstance(serve_result, dict), (
-        f"Serve should return dict, got {type(serve_result)}"
+    assert serve_result.get("status") == "ok", (
+        f"Serve failed for {model_id}: {serve_result}"
     )
-    # TODO: Make this more specific once the API is updated
-    assert serve_result is not None, f"Serve returned None for {model_id}"
 
     # Step 4: Generate example inputs from the served model
     n_samples = 2
     generate_result = generate_inputs_helper(
         model_id, n_samples=n_samples, mode="random"
     )
-    assert isinstance(generate_result, dict), (
-        f"Generate should return dict, got {type(generate_result)}"
+    assert generate_result.get("status") == "ok", (
+        f"Generate failed for {model_id}: {generate_result}"
     )
     assert generate_result.get("num_samples") == n_samples, (
         f"Expected {n_samples} samples for {model_id}, got {generate_result}"
@@ -93,8 +87,8 @@ def test_model_complete_lifecycle(tmp_path):
     predict_result = predict_helper(
         model_id, generate_result["output_path"], str(output_path)
     )
-    assert isinstance(predict_result, dict), (
-        f"Predict should return dict, got {type(predict_result)}"
+    assert predict_result.get("status") == "ok", (
+        f"Predict failed for {model_id}: {predict_result}"
     )
     assert predict_result.get("num_predictions") == n_samples, (
         f"Expected {n_samples} predictions for {model_id}, got {predict_result}"
@@ -253,10 +247,10 @@ def test_model_complete_lifecycle(tmp_path):
 
     # Step 11: Close the model service
     close_result = close_model_helper(model_id)
-    assert close_result is True
+    assert close_result.get("status") == "ok", close_result
 
     # Step 12: Delete the model
     delete_result = delete_model_helper(model_id)
-    assert delete_result is True
+    assert delete_result.get("status") == "ok", delete_result
     check_result = check_model_fetched_helper(model_id)
-    assert check_result is False
+    assert check_result.get("fetched") is False, check_result

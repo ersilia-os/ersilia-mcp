@@ -12,6 +12,7 @@ def test_generate_inputs_tool_success():
         "ersilia_mcp.tools.generate_inputs.generate_inputs_helper"
     ) as mock_generate:
         mock_response = {
+            "status": "ok",
             "output_path": "/tmp/eos3b5e_abc.txt",
             "num_samples": 2,
             "samples": ["CCO", "CCC"],
@@ -33,6 +34,7 @@ def test_generate_inputs_tool_with_output_path():
         "ersilia_mcp.tools.generate_inputs.generate_inputs_helper"
     ) as mock_generate:
         mock_generate.return_value = {
+            "status": "ok",
             "output_path": "/data/out.txt",
             "num_samples": 1,
             "samples": ["CCO"],
@@ -52,11 +54,14 @@ def test_generate_inputs_tool_with_output_path():
 
 
 def test_generate_inputs_tool_failure():
-    """Test the generate_inputs tool returns an empty dict when generation fails."""
+    """Test the generate_inputs tool surfaces the error message on failure."""
     with patch(
         "ersilia_mcp.tools.generate_inputs.generate_inputs_helper"
     ) as mock_generate:
-        mock_generate.return_value = {}
+        mock_generate.return_value = {"status": "error", "error": "Model not served"}
         result = asyncio.run(mcp.call_tool("generate_inputs", {"model": "invalid"}))
-        assert result.structured_content == {}
+        assert result.structured_content == {
+            "status": "error",
+            "error": "Model not served",
+        }
         mock_generate.assert_called_once_with("invalid", 5, "random", None)

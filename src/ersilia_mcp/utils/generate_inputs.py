@@ -6,6 +6,7 @@ import traceback
 
 from ersilia.api import Model
 
+from ersilia_mcp.utils.errors import error_result
 from ersilia_mcp.utils.logging import log_conda_environment, logger
 
 PREVIEW_LIMIT = 20
@@ -41,9 +42,9 @@ def generate_inputs_helper(
     Returns
     -------
     dict
-        A summary containing the ``output_path``, the total ``num_samples``,
-        and a ``samples`` preview capped at 20 entries, or an empty dict if
-        generation failed.
+        On success, ``status`` is ``"ok"`` with the ``output_path``, the total
+        ``num_samples`` and a ``samples`` preview capped at 20 entries. On
+        failure, ``status`` is ``"error"`` with an ``error`` message.
     """
     try:
         log_conda_environment()
@@ -52,7 +53,9 @@ def generate_inputs_helper(
         samples = mdl.example(n_samples=n_samples, mode=mode)
         if not samples:
             logger.error(f"No samples generated for {model_id}; is the model served?")
-            return {}
+            return error_result(
+                f"No samples generated for {model_id}; is the model served?"
+            )
 
         if output_path is None:
             fd, output_path = tempfile.mkstemp(prefix=f"{model_id}_", suffix=".txt")
@@ -62,6 +65,7 @@ def generate_inputs_helper(
 
         logger.success(f"Wrote {len(samples)} sample(s) to {output_path}")
         return {
+            "status": "ok",
             "output_path": output_path,
             "num_samples": len(samples),
             "samples": samples[:PREVIEW_LIMIT],
@@ -69,4 +73,4 @@ def generate_inputs_helper(
     except (Exception, SystemExit) as e:  # noqa: BLE001
         logger.error(f"Encountered an error generating samples for {model_id}: {e!s}")
         logger.error(traceback.format_exc())
-        return {}
+        return error_result(e)

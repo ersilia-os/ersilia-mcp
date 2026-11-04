@@ -7,6 +7,7 @@ import traceback
 
 from ersilia.api import Model
 
+from ersilia_mcp.utils.errors import error_result
 from ersilia_mcp.utils.logging import log_conda_environment, logger
 
 
@@ -59,15 +60,16 @@ def predict_helper(
     Returns
     -------
     dict
-        A summary containing the ``output_path``, the number of predictions, and
-        the result ``columns``, or an empty dict if prediction failed.
+        On success, ``status`` is ``"ok"`` with the ``output_path``, the
+        ``num_predictions`` and the result ``columns``. On failure, ``status``
+        is ``"error"`` with an ``error`` message.
     """
     try:
         log_conda_environment()
         inputs = parse_input(input_data)
         if not inputs:
             logger.error("No valid inputs found to predict on")
-            return {}
+            return error_result("No valid inputs provided")
 
         logger.info(f"Running {len(inputs)} prediction(s) with model {model_id}")
         mdl = Model(model_id=model_id, verbose=True)
@@ -80,6 +82,7 @@ def predict_helper(
 
         logger.success(f"Wrote {len(df)} prediction(s) to {output_path}")
         return {
+            "status": "ok",
             "output_path": output_path,
             "num_predictions": len(df),
             "columns": list(df.columns),
@@ -87,4 +90,4 @@ def predict_helper(
     except (Exception, SystemExit) as e:  # noqa: BLE001
         logger.error(f"Encountered an error while predicting with {model_id}: {e!s}")
         logger.error(traceback.format_exc())
-        return {}
+        return error_result(e)

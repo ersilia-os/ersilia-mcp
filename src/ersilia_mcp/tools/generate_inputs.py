@@ -36,12 +36,12 @@ def register(mcp: FastMCP) -> None:
         Returns
         -------
         dict
-            A summary containing:
+            On success, ``status`` is ``"ok"`` with:
                 - output_path: The file the generated inputs were written to
                 - num_samples: The total number of samples generated
                 - samples: A preview of up to 20 samples; see output_path for
                   the rest
-            or an empty dict if generation failed.
+            On failure, ``status`` is ``"error"`` with an ``error`` message.
         """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(

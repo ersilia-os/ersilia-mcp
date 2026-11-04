@@ -19,6 +19,7 @@ def test_generate_inputs_helper_success(mock_model_class, tmp_path):
     )
 
     assert result == {
+        "status": "ok",
         "output_path": str(output_path),
         "num_samples": 3,
         "samples": ["CCO", "CCC", "CCCC"],
@@ -63,23 +64,24 @@ def test_generate_inputs_helper_default_output_path(mock_model_class):
 
 @patch("ersilia_mcp.utils.generate_inputs.Model")
 def test_generate_inputs_helper_no_samples(mock_model_class):
-    """Test generate_inputs_helper returns an empty dict when no samples are generated."""
+    """Test generate_inputs_helper returns an error when no samples are generated."""
     mock_instance = MagicMock()
     mock_instance.example.return_value = []
     mock_model_class.return_value = mock_instance
 
     result = generate_inputs_helper("eos3b5e")
 
-    assert result == {}
+    assert result["status"] == "error"
+    assert "is the model served" in result["error"]
 
 
 @patch("ersilia_mcp.utils.generate_inputs.Model")
 def test_generate_inputs_helper_error(mock_model_class):
-    """Test generate_inputs_helper returns an empty dict when the model is not served."""
+    """Test generate_inputs_helper returns the error when the model is not served."""
     mock_instance = MagicMock()
     mock_instance.example.side_effect = Exception("Model not served")
     mock_model_class.return_value = mock_instance
 
     result = generate_inputs_helper("eos3b5e")
 
-    assert result == {}
+    assert result == {"status": "error", "error": "Model not served"}

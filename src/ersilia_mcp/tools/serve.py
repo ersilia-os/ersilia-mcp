@@ -1,4 +1,4 @@
-"""MCP tools for serving Ersilia models and closing Ersilia models"""
+"""MCP tool for serving Ersilia models."""
 
 import asyncio
 
@@ -22,8 +22,8 @@ def register(mcp: FastMCP) -> None:
         Returns
         -------
         dict
-            A dictionary of model information from ``Model.info()``, or an empty
-            dict if serving failed.
+            ``status`` is ``"ok"`` with ``model`` and ``info`` (from
+            ``Model.info()``), or ``"error"`` with an ``error`` message.
         """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, serve_model_helper, model)

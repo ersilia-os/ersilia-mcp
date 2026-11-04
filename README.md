@@ -21,9 +21,11 @@ and fetch, serve, and run its AI/ML models, all over stdio.
 | Tool      | `remove_from_isaura`               | Removes specific inputs from a model's data in a bucket. |
 
 A typical workflow is `search_model` → `fetch_model` → `serve_model` → `predict`
-→ `close_model`. You can optionally call `generate_inputs` after serving to
-sample example inputs to feed into `predict`, and `delete_model` to remove the
-model from local storage.
+→ `close_model`. `fetch_model` returns immediately for a model that is already
+fetched, so `check_model_fetched` is only needed to inspect state without
+downloading. You can optionally call `generate_inputs` after serving to sample
+example inputs to feed into `predict`, and `delete_model` to remove the model
+from local storage.
 
 The last five tools use an [Isaura](https://github.com/ersilia-os/isaura)
 precalculation store, which holds results computed earlier. Call

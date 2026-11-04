@@ -18,6 +18,10 @@ from ersilia_mcp.utils.logging import logger
 # Columns Isaura accepts as the molecule/lookup key, in priority order.
 _INPUT_COLUMNS = ("input", "smiles")
 
+# Longest input list returned inline. Longer lists are cut and spilled to a
+# file so a large request cannot flood the client's context window.
+MAX_LISTED = 100
+
 
 def _error_message(exc: BaseException) -> str:
     """
@@ -130,6 +134,34 @@ def _resolve_inputs(input_data: str) -> tuple:
     return requested, temp_input_csv, temp_input_csv
 
 
+def _add_listing(result: dict, key: str, values: list) -> None:
+    """
+    Add an input list to ``result``, capped at :data:`MAX_LISTED` entries.
+
+    When the list is longer than the cap, only the first entries are kept
+    inline, ``<key>_truncated`` is set, and the full list is written to a text
+    file (one input per line, readable by ``predict``) whose path is returned
+    under ``<key>_path``.
+
+    Parameters
+    ----------
+    result : dict
+        The tool response to update in place.
+    key : str
+        The response key for the list (e.g. ``"missing"``).
+    values : list
+        The full list of inputs.
+    """
+    result[key] = values[:MAX_LISTED]
+    if len(values) <= MAX_LISTED:
+        return
+    fd, path = tempfile.mkstemp(prefix=f"isaura_{key}_", suffix=".txt")
+    with os.fdopen(fd, "w") as f:
+        f.write("\n".join(values) + "\n")
+    result[f"{key}_truncated"] = True
+    result[f"{key}_path"] = path
+
+
 def _inspect_cached(model_id: str, version: str, bucket: str, input_csv: str) -> list:
     """
     Return the subset of the inputs in ``input_csv`` that Isaura has cached.
@@ -192,8 +224,9 @@ def read(
         Where to write the retrieved results CSV. Only written when at least
         one input is cached; if omitted, a temporary file is created.
     verbose : bool, optional
-        When ``True``, also return the full list of inputs that were not
-        cached. By default only the counts are returned.
+        When ``True``, also list the inputs that were not cached (capped at
+        :data:`MAX_LISTED`; the full list goes to a file). By default only the
+        counts are returned.
 
     Returns
     -------
@@ -208,7 +241,10 @@ def read(
                 "output_path": str | None,  # None when nothing was cached
                 "columns": list,
                 # only present when verbose=True:
-                "missing": list,  # every input not cached
+                "missing": list,  # first MAX_LISTED inputs not cached
+                # only when more than MAX_LISTED inputs are missing:
+                "missing_truncated": True,
+                "missing_path": str,  # text file with every missing input
             }
 
         On failure (e.g. the local store is unreachable)::
@@ -242,7 +278,7 @@ def read(
             "columns": [],
         }
         if verbose:
-            result["missing"] = missing
+            _add_listing(result, "missing", missing)
         if not cached:
             return result
 
@@ -393,8 +429,9 @@ def inspect(
     bucket : str, optional
         Project bucket to inspect, by default ``"isaura-public"``.
     verbose : bool, optional
-        When ``True``, include the full ``cached`` and ``missing`` input lists
-        in the result. By default only the counts are returned.
+        When ``True``, include the ``cached`` and ``missing`` input lists in
+        the result, each capped at :data:`MAX_LISTED` (the full list goes to a
+        file). By default only the counts are returned.
 
     Returns
     -------
@@ -406,9 +443,11 @@ def inspect(
                 "num_requested": int,
                 "num_cached": int,
                 "num_missing": int,
-                # only present when verbose=True:
-                "cached": list,   # every cached input
-                "missing": list,  # every input not cached
+                # only present when verbose=True; each list is capped at
+                # MAX_LISTED, with "<key>_truncated" and "<key>_path" (a text
+                # file with the full list) added when it is longer:
+                "cached": list,
+                "missing": list,
             }
 
         On failure (e.g. the local store is unreachable)::
@@ -438,8 +477,8 @@ def inspect(
             "num_missing": len(missing),
         }
         if verbose:
-            result["cached"] = cached
-            result["missing"] = missing
+            _add_listing(result, "cached", cached)
+            _add_listing(result, "missing", missing)
         return result
     except (Exception, SystemExit) as e:  # noqa: BLE001
         logger.error(f"Error inspecting cache for {model_id}: {e!s}")

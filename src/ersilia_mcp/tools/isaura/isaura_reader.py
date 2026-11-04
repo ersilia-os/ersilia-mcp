@@ -38,7 +38,8 @@ def register(mcp: FastMCP) -> None:
         output_path : str, optional
             Where to write the cached values (CSV filepath); a temporary file is used if omitted.
         verbose : bool, optional
-            Also return the list of uncached inputs.
+            Also list the uncached inputs (first 100; a ``missing_path`` text
+            file holds the rest when there are more).
 
         Returns
         -------
@@ -51,8 +52,9 @@ def register(mcp: FastMCP) -> None:
                   (``None`` when none of the inputs were cached in isaura)
                 - columns: The result columns
             When ``verbose`` is ``True``, also includes:
-                - cached: every cached input
-                - missing: inputs not in the cache
+                - missing: up to 100 inputs not in the cache
+                - missing_truncated / missing_path: set when there are more,
+                  with a text file (one input per line) listing all of them
             On failure (e.g. the local store is unreachable), ``status`` is
             ``"error"`` with an ``error`` message.
         """

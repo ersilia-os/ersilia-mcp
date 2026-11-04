@@ -1,3 +1,9 @@
-"""Ersilia MCP — a hello-world Model Context Protocol server."""
+"""Model Context Protocol server for the Ersilia Model Hub."""
 
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    # Single source of truth is ``[project].version`` in pyproject.toml.
+    __version__ = version("ersilia-mcp")
+except PackageNotFoundError:  # running from a source tree that is not installed
+    __version__ = "unknown"

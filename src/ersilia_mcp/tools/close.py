@@ -11,7 +11,7 @@ def register(mcp: FastMCP) -> None:
     """Register the close model tool on the MCP server."""
 
     @mcp.tool(timeout=10.0)
-    async def close_model(model: str) -> bool:
+    async def close_model(model: str) -> dict:
         """Close a served model, freeing its resources.
 
         Parameters
@@ -21,8 +21,9 @@ def register(mcp: FastMCP) -> None:
 
         Returns
         -------
-        bool
-            True if closed successfully, False otherwise.
+        dict
+            ``status`` is ``"ok"`` if closed, or ``"error"`` with an ``error``
+            message.
         """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, close_model_helper, model)

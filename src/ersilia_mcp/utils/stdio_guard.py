@@ -16,10 +16,14 @@ class StdoutGuard(Middleware):
     stderr from here on does not affect the protocol messages.
 
     Only writes made through ``sys.stdout`` are redirected. Child processes
-    that inherit file descriptor 1 are not.
+    that inherit file descriptor 1 are not. Other transports (an in-memory
+    client in tests, HTTP) are left alone, so embedding the server never
+    hijacks the host process's stdout.
     """
 
     async def on_initialize(self, context, call_next):
-        """Redirect ``sys.stdout`` to stderr, then handle the request as usual."""
-        sys.stdout = sys.stderr
+        """Redirect ``sys.stdout`` to stderr on stdio, then handle the request."""
+        fastmcp_context = context.fastmcp_context
+        if fastmcp_context is not None and fastmcp_context.transport == "stdio":
+            sys.stdout = sys.stderr
         return await call_next(context)

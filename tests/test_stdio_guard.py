@@ -7,6 +7,7 @@ import subprocess
 import sys
 import textwrap
 import time
+from types import SimpleNamespace
 
 import pytest
 
@@ -31,17 +32,36 @@ SERVER = textwrap.dedent(
 )
 
 
-def test_on_initialize_points_stdout_at_stderr(monkeypatch):
-    """Test the guard redirects sys.stdout and still passes the request on."""
+def _context(transport):
+    return SimpleNamespace(fastmcp_context=SimpleNamespace(transport=transport))
+
+
+def test_on_initialize_points_stdout_at_stderr_on_stdio(monkeypatch):
+    """Test the guard redirects sys.stdout over stdio and passes the request on."""
     monkeypatch.setattr(sys, "stdout", sys.stdout)
 
     async def call_next(context):
         return "handled"
 
-    result = asyncio.run(StdoutGuard().on_initialize(None, call_next))
+    result = asyncio.run(StdoutGuard().on_initialize(_context("stdio"), call_next))
 
     assert result == "handled"
     assert sys.stdout is sys.stderr
+
+
+@pytest.mark.parametrize(
+    "context", [_context(None), _context("http"), SimpleNamespace(fastmcp_context=None)]
+)
+def test_on_initialize_leaves_stdout_alone_off_stdio(monkeypatch, context):
+    """Test embedding the server (in-memory client, HTTP) never hijacks stdout."""
+    monkeypatch.setattr(sys, "stdout", sys.stdout)
+    before = sys.stdout
+
+    async def call_next(ctx):
+        return "handled"
+
+    assert asyncio.run(StdoutGuard().on_initialize(context, call_next)) == "handled"
+    assert sys.stdout is before
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="uses select on pipes")

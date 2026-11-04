@@ -297,6 +297,13 @@ async def run_with_progress(
         while True:
             done, _ = await asyncio.wait({future}, timeout=tick)
             if done:
+                # Send what changed since the last update (e.g. the final
+                # count), so a client sees 100% before the result arrives.
+                if (
+                    future.exception() is None
+                    and reporter.snapshot().version != sent_version
+                ):
+                    await send(force=True)
                 return future.result()
             await send(force=False)
     finally:

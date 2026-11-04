@@ -150,6 +150,28 @@ def test_countable_progress_is_determinate_and_still_increasing():
     assert any(1000 < p < 1001 for p, _, _ in determinate)  # nudged heartbeat
 
 
+def test_final_count_is_sent_before_the_result_returns():
+    """Test a call that finishes between updates still reports its last state."""
+
+    def work(on_progress):
+        on_progress(2500, 2500, "2500/2500 inputs")  # then returns immediately
+        return "done"
+
+    ctx = FakeContext()
+    assert _run(ctx, work, with_reporter=True, interval=5.0) == "done"
+
+    progress_value, total, message = ctx.reports[-1]
+    assert (progress_value, total) == (2500, 2500)
+    assert "2500/2500 inputs" in message
+
+
+def test_no_final_update_when_the_call_failed_or_nothing_changed():
+    """Test an extra update is only sent for a successful call whose state changed."""
+    ctx = FakeContext()
+    _run(ctx, _slow, 0, interval=5.0)
+    assert len(ctx.reports) == 1  # just the immediate first report
+
+
 def test_client_errors_never_fail_the_call():
     """Test a client that cannot receive progress does not break the tool."""
     ctx = FakeContext(fail_progress=True, fail_info=True)

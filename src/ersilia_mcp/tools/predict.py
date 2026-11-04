@@ -1,10 +1,9 @@
 """MCP tools for running predictions against served Ersilia models"""
 
-import asyncio
-
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
 
 from ersilia_mcp.utils.predict import predict_helper
+from ersilia_mcp.utils.progress import run_with_progress
 
 
 def register(mcp: FastMCP) -> None:
@@ -12,7 +11,10 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(timeout=900.0)
     async def predict(
-        model: str, input_data: str, output_path: str | None = None
+        model: str,
+        input_data: str,
+        ctx: Context,
+        output_path: str | None = None,
     ) -> dict:
         """Run predictions against a served model from the Ersilia model hub.
 
@@ -37,7 +39,11 @@ def register(mcp: FastMCP) -> None:
                 - columns: The result columns
             On failure, ``status`` is ``"error"`` with an ``error`` message.
         """
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None, predict_helper, model, input_data, output_path
+        return await run_with_progress(
+            ctx,
+            predict_helper,
+            model,
+            input_data,
+            output_path,
+            label=f"Predicting with {model}",
         )

@@ -26,6 +26,18 @@ def test_fetch_model_helper_already_fetched(mock_model_class):
 
 
 @patch("ersilia_mcp.utils.model_operations.Model")
+def test_fetch_model_helper_is_verbose(mock_model_class):
+    """Test fetch runs Ersilia in verbose mode so pull lines are logged for progress."""
+    mock_instance = MagicMock()
+    mock_instance.is_fetched.return_value = True
+    mock_model_class.return_value = mock_instance
+
+    fetch_model_helper("eos8v1a")
+
+    mock_model_class.assert_called_once_with(model_id="eos8v1a", verbose=True)
+
+
+@patch("ersilia_mcp.utils.model_operations.Model")
 def test_fetch_model_helper_not_yet_fetched(mock_model_class):
     """Test fetch_model_helper when model needs to be fetched."""
     mock_instance = MagicMock()

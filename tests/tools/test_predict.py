@@ -1,7 +1,7 @@
 """Tests for the predict tool."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from ersilia_mcp.server import mcp
 
@@ -20,7 +20,9 @@ def test_predict_tool_success():
             mcp.call_tool("predict", {"model": "eos3b5e", "input_data": "CCO,CCC"})
         )
         assert result.structured_content == mock_response
-        mock_predict.assert_called_once_with("eos3b5e", "CCO,CCC", None)
+        mock_predict.assert_called_once_with(
+            "eos3b5e", "CCO,CCC", None, on_progress=ANY
+        )
 
 
 def test_predict_tool_with_output_path():
@@ -42,7 +44,9 @@ def test_predict_tool_with_output_path():
                 },
             )
         )
-        mock_predict.assert_called_once_with("eos3b5e", "CCO", "/data/out.csv")
+        mock_predict.assert_called_once_with(
+            "eos3b5e", "CCO", "/data/out.csv", on_progress=ANY
+        )
 
 
 def test_predict_tool_failure():
@@ -56,4 +60,4 @@ def test_predict_tool_failure():
             "status": "error",
             "error": "Model crashed",
         }
-        mock_predict.assert_called_once_with("invalid", "CCO", None)
+        mock_predict.assert_called_once_with("invalid", "CCO", None, on_progress=ANY)

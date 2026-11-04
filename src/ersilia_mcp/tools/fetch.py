@@ -2,19 +2,20 @@
 
 import asyncio
 
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
 
 from ersilia_mcp.utils.model_operations import (
     check_model_fetched_helper,
     fetch_model_helper,
 )
+from ersilia_mcp.utils.progress import run_with_progress
 
 
 def register(mcp: FastMCP) -> None:
     """Register the model tools on the MCP server."""
 
     @mcp.tool(timeout=900.0)
-    async def fetch_model(model: str) -> dict:
+    async def fetch_model(model: str, ctx: Context) -> dict:
         """Fetch a model from the Ersilia model hub. This can take a few minutes.
 
         Parameters
@@ -28,8 +29,9 @@ def register(mcp: FastMCP) -> None:
             ``status`` is ``"ok"`` with ``model`` and ``fetched`` (``True``), or
             ``"error"`` with an ``error`` message.
         """
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, fetch_model_helper, model)
+        return await run_with_progress(
+            ctx, fetch_model_helper, model, label=f"Fetching {model}"
+        )
 
     @mcp.tool(timeout=10.0)
     async def check_model_fetched(model: str) -> dict:

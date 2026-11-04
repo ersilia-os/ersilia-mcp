@@ -46,4 +46,5 @@ def register(mcp: FastMCP) -> None:
             input_data,
             output_path,
             label=f"Predicting with {model}",
+            with_reporter=True,
         )

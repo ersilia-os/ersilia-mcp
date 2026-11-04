@@ -24,14 +24,18 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v4.0.0
 
-      # Extract version from release tag, or fall back to manual input
+      # The release tag (vX.Y.Z) must match [project].version, otherwise the
+      # release is blocked rather than silently republished under another number.
       - name: Determine version
         id: get_version
         run: |
+          VERSION=$(poetry version -s)
           if [ "${{ github.event_name }}" = "release" ]; then
-            VERSION="${GITHUB_REF_NAME#v}"
-          else
-            VERSION=$(poetry version -s)
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            if [ "$TAG_VERSION" != "$VERSION" ]; then
+              echo "::error::Release tag '$GITHUB_REF_NAME' does not match pyproject.toml version '$VERSION'"
+              exit 1
+            fi
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Publishing version $VERSION"
@@ -39,8 +43,4 @@ jobs:
         run: |
           poetry config pypi-token.pypi "${{ secrets.ALL_PYPI_PROJECTS_API_TOKEN }}"
       - name: Build and publish to PyPI
-        env:
-          VERSION: ${{ steps.get_version.outputs.version }}
-        run: |
-          poetry version $VERSION
-          poetry publish --build
+        run: poetry publish --build

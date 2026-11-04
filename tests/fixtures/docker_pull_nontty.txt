@@ -1,0 +1,20 @@
+3.12-alpine: Pulling from library/python
+d3531b7a4f21: Pulling fs layer
+d2521f7ab0b8: Pulling fs layer
+59fd86b461b1: Pulling fs layer
+70ad141c380e: Pulling fs layer
+70ad141c380e: Waiting
+d2521f7ab0b8: Verifying Checksum
+d2521f7ab0b8: Download complete
+70ad141c380e: Verifying Checksum
+70ad141c380e: Download complete
+d3531b7a4f21: Download complete
+d3531b7a4f21: Pull complete
+d2521f7ab0b8: Pull complete
+59fd86b461b1: Verifying Checksum
+59fd86b461b1: Download complete
+59fd86b461b1: Pull complete
+70ad141c380e: Pull complete
+Digest: sha256:e6dae589c1c05976188fd3bd019afd091445fc533ed2ea29001beddc7368a9c8
+Status: Downloaded newer image for python:3.12-alpine
+docker.io/library/python:3.12-alpine

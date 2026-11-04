@@ -26,7 +26,9 @@ def fetch_model_helper(model_id: str) -> dict:
     try:
         log_conda_environment()
         logger.info(f"Checking if model {model_id} is fetched")
-        mdl = Model(model_id=model_id)
+        # verbose=True: Ersilia then logs each Docker pull line (which feeds the
+        # progress messages) instead of drawing a live progress bar on stdout.
+        mdl = Model(model_id=model_id, verbose=True)
         is_already_fetched = mdl.is_fetched()
         logger.info(f"Model {model_id} already fetched: {is_already_fetched}")
         if not is_already_fetched:

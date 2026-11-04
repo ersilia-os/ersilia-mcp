@@ -6,6 +6,7 @@ subprocess.
 """
 
 from fastmcp import FastMCP
+from fastmcp.server.middleware.timing import DetailedTimingMiddleware
 
 from ersilia_mcp.tools import (
     close,
@@ -26,6 +27,9 @@ from ersilia_mcp.tools.isaura import (
 from ersilia_mcp.utils.logging import logger
 
 mcp = FastMCP("ersilia-mcp")
+# Log how long every tool call takes (e.g. "Tool 'predict' completed in 812.40ms")
+# to our own logger, so durations land in ~/eos/mcp/logs and on stderr.
+mcp.add_middleware(DetailedTimingMiddleware(logger=logger))
 close.register(mcp)
 delete.register(mcp)
 fetch.register(mcp)
